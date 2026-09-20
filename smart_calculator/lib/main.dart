@@ -2,19 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
 
-// ═══════ COLORS ═══════
-const kBg = Color(0xFF1A1A2E);
-const kCard = Color(0xFF252540);
-const kCard2 = Color(0xFF2F2F4F);
-const kPurple = Color(0xFF6C63FF);
-const kPurpleLight = Color(0xFF8B80FF);
-const kOrange = Color(0xFFFF6B35);
-const kBlue = Color(0xFF4A90E2);
-const kGreen = Color(0xFF2ECC71);
-const kRed = Color(0xFFE74C3C);
-const kYellow = Color(0xFFF39C12);
+// ═══════ COLORS (Black + Red Theme) ═══════
+const kBg = Color(0xFF000000);           // Pure Black
+const kCard = Color(0xFF1A1A1A);         // Dark Grey Card
+const kCard2 = Color(0xFF262626);        // Lighter Grey
+const kRed = Color(0xFFFF2E2E);          // Bright Red
+const kRedDark = Color(0xFFCC1F1F);      // Dark Red
+const kRedGlow = Color(0xFFFF4444);      // Red Glow
+const kGrey = Color(0xFF2E2E2E);         // Button Grey
 const kTextWhite = Color(0xFFFFFFFF);
-const kTextGrey = Color(0xFF9B9BB4);
+const kTextGrey = Color(0xFF9B9B9B);
 
 void main() {
   runApp(const SmartCalculatorApp());
@@ -26,12 +23,12 @@ class SmartCalculatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Finance Calculator',
+      title: 'Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
         scaffoldBackgroundColor: kBg,
-        primaryColor: kPurple,
+        primaryColor: kRed,
         textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         appBarTheme: const AppBarTheme(
           backgroundColor: kBg,
@@ -69,9 +66,10 @@ class _HomeScreenState extends State<HomeScreen> {
         decoration: BoxDecoration(
           color: kCard,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: kRed.withValues(alpha: 0.2), width: 1),
           boxShadow: [
             BoxShadow(
-              color: kPurple.withValues(alpha: 0.3),
+              color: kRed.withValues(alpha: 0.15),
               blurRadius: 20,
               offset: const Offset(0, 5),
             ),
@@ -81,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(24),
           child: NavigationBar(
             backgroundColor: kCard,
-            indicatorColor: kPurple.withValues(alpha: 0.3),
+            indicatorColor: kRed.withValues(alpha: 0.25),
             selectedIndex: _i,
             height: 65,
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
@@ -89,22 +87,22 @@ class _HomeScreenState extends State<HomeScreen> {
             destinations: const [
               NavigationDestination(
                 icon: Icon(Icons.calculate_outlined, color: kTextGrey),
-                selectedIcon: Icon(Icons.calculate, color: kPurpleLight),
+                selectedIcon: Icon(Icons.calculate, color: kRed),
                 label: 'Calc',
               ),
               NavigationDestination(
                 icon: Icon(Icons.bar_chart_outlined, color: kTextGrey),
-                selectedIcon: Icon(Icons.bar_chart, color: kPurpleLight),
+                selectedIcon: Icon(Icons.bar_chart, color: kRed),
                 label: 'Finance',
               ),
               NavigationDestination(
                 icon: Icon(Icons.grid_view_outlined, color: kTextGrey),
-                selectedIcon: Icon(Icons.grid_view, color: kPurpleLight),
+                selectedIcon: Icon(Icons.grid_view, color: kRed),
                 label: 'Tools',
               ),
               NavigationDestination(
                 icon: Icon(Icons.currency_exchange_outlined, color: kTextGrey),
-                selectedIcon: Icon(Icons.currency_exchange, color: kPurpleLight),
+                selectedIcon: Icon(Icons.currency_exchange, color: kRed),
                 label: 'Currency',
               ),
             ],
@@ -174,18 +172,18 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return double.parse(s);
   }
 
-  Widget _btn(String label, {Color? bg, Color? fg, int flex = 1}) {
+  // ✅ FIXED: All buttons same size, equal width
+  Widget _btn(String label, {Color? bg, Color? fg}) {
     return Expanded(
-      flex: flex,
       child: Padding(
         padding: const EdgeInsets.all(5),
         child: AspectRatio(
-          aspectRatio: 1.15,
+          aspectRatio: 1.0,
           child: Material(
-            color: bg ?? kCard,
-            borderRadius: BorderRadius.circular(18),
+            color: bg ?? kGrey,
+            borderRadius: BorderRadius.circular(20),
             child: InkWell(
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(20),
               onTap: () => _onKey(label),
               child: Center(
                 child: Text(
@@ -209,6 +207,7 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return SafeArea(
       child: Column(
         children: [
+          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Row(
@@ -220,28 +219,30 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                         color: kTextWhite)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: kCard,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: kRed.withValues(alpha: 0.3)),
                   ),
-                  child: const Icon(Icons.history, color: kPurpleLight, size: 20),
+                  child: const Icon(Icons.history, color: kRed, size: 20),
                 ),
               ],
             ),
           ),
+          // Display
           Expanded(
             flex: 2,
             child: Container(
               alignment: Alignment.bottomRight,
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 reverse: true,
                 child: Text(
                   _display,
                   style: GoogleFonts.poppins(
-                    fontSize: 50,
+                    fontSize: 52,
                     fontWeight: FontWeight.bold,
                     color: kTextWhite,
                   ),
@@ -249,43 +250,47 @@ class _BasicCalculatorState extends State<BasicCalculator> {
               ),
             ),
           ),
+          // Keypad
           Expanded(
             flex: 5,
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 children: [
+                  // Row 1 - Clear, Backspace, %, ÷
                   Row(children: [
-                    _btn('C', bg: kRed.withValues(alpha: 0.2), fg: kRed),
-                    _btn('⌫', bg: kOrange.withValues(alpha: 0.2), fg: kOrange),
-                    _btn('%', bg: kOrange.withValues(alpha: 0.2), fg: kOrange),
-                    _btn('÷', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
+                    _btn('C', bg: kRedDark, fg: kTextWhite),
+                    _btn('⌫', bg: kCard2, fg: kRed),
+                    _btn('%', bg: kCard2, fg: kTextWhite),
+                    _btn('÷', bg: kRed.withValues(alpha: 0.15), fg: kRed),
                   ]),
+                  // Row 2 - 7, 8, 9, ×
                   Row(children: [
                     _btn('7'),
                     _btn('8'),
                     _btn('9'),
-                    _btn('×', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
+                    _btn('×', bg: kRed.withValues(alpha: 0.15), fg: kRed),
                   ]),
+                  // Row 3 - 4, 5, 6, -
                   Row(children: [
                     _btn('4'),
                     _btn('5'),
                     _btn('6'),
-                    _btn('-', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
+                    _btn('-', bg: kRed.withValues(alpha: 0.15), fg: kRed),
                   ]),
+                  // Row 4 - 1, 2, 3, +
                   Row(children: [
                     _btn('1'),
                     _btn('2'),
                     _btn('3'),
-                    _btn('+', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
+                    _btn('+', bg: kRed.withValues(alpha: 0.15), fg: kRed),
                   ]),
+                  // Row 5 - 0, ., = (span 2)
                   Row(children: [
                     _btn('0'),
                     _btn('.'),
-                    _btn('=',
-                        bg: kPurple,
-                        fg: kTextWhite,
-                        flex: 2),
+                    _btn('=', bg: kRed, fg: kTextWhite),
+                    _btn('=', bg: kRed, fg: kTextWhite),
                   ]),
                 ],
               ),
@@ -304,34 +309,10 @@ class FinanceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      {
-        't': 'EMI Calculator',
-        's': 'Loan EMI',
-        'i': Icons.home_work,
-        'c': kPurple,
-        'screen': const EmiCalculator()
-      },
-      {
-        't': 'SIP Calculator',
-        's': 'Mutual Fund',
-        'i': Icons.trending_up,
-        'c': kGreen,
-        'screen': const SipCalculator()
-      },
-      {
-        't': 'FD Calculator',
-        's': 'Fixed Deposit',
-        'i': Icons.savings,
-        'c': kOrange,
-        'screen': const FdCalculator()
-      },
-      {
-        't': 'GST Calculator',
-        's': 'Tax Calculator',
-        'i': Icons.receipt_long,
-        'c': kRed,
-        'screen': const GstCalculator()
-      },
+      {'t': 'EMI Calculator', 's': 'Loan EMI', 'i': Icons.home_work, 'c': kRed, 'screen': const EmiCalculator()},
+      {'t': 'SIP Calculator', 's': 'Mutual Fund', 'i': Icons.trending_up, 'c': Color(0xFF00D09C), 'screen': const SipCalculator()},
+      {'t': 'FD Calculator', 's': 'Fixed Deposit', 'i': Icons.savings, 'c': Color(0xFFFFA500), 'screen': const FdCalculator()},
+      {'t': 'GST Calculator', 's': 'Tax Calculator', 'i': Icons.receipt_long, 'c': Color(0xFF8B5CF6), 'screen': const GstCalculator()},
     ];
 
     return SafeArea(
@@ -349,13 +330,14 @@ class FinanceScreen extends StatelessWidget {
                         color: kTextWhite)),
                 const Spacer(),
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
                     color: kCard,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: kRed.withValues(alpha: 0.3)),
                   ),
                   child: const Icon(Icons.notifications_none,
-                      color: kTextWhite, size: 22),
+                      color: kRed, size: 22),
                 ),
               ],
             ),
@@ -364,20 +346,20 @@ class FinanceScreen extends StatelessWidget {
                 style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
             const SizedBox(height: 20),
 
-            // Portfolio Card
+            // Portfolio Card - Red Gradient
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [kPurple, Color(0xFF4A3AFF)],
+                  colors: [kRed, Color(0xFF8B0000)],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: kPurple.withValues(alpha: 0.4),
+                    color: kRed.withValues(alpha: 0.4),
                     blurRadius: 20,
                     offset: const Offset(0, 8),
                   ),
@@ -388,7 +370,8 @@ class FinanceScreen extends StatelessWidget {
                 children: [
                   Text('Your Portfolio',
                       style: GoogleFonts.poppins(
-                          fontSize: 14, color: kTextWhite.withValues(alpha: 0.9))),
+                          fontSize: 14,
+                          color: kTextWhite.withValues(alpha: 0.9))),
                   const SizedBox(height: 6),
                   Text('₹ 12,45,600',
                       style: GoogleFonts.poppins(
@@ -399,11 +382,11 @@ class FinanceScreen extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.arrow_upward,
-                          color: kGreen, size: 16),
+                          color: kTextWhite, size: 16),
                       const SizedBox(width: 4),
                       Text('+12.5% this month',
                           style: GoogleFonts.poppins(
-                              fontSize: 12, color: kGreen)),
+                              fontSize: 12, color: kTextWhite)),
                     ],
                   ),
                 ],
@@ -458,8 +441,9 @@ class FinanceScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.2),
+                  color: color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Icon(icon, color: color, size: 24),
               ),
@@ -498,11 +482,11 @@ class ToolsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       {'t': 'BMI', 'i': Icons.favorite, 'c': kRed, 's': const BmiCalculator()},
-      {'t': 'Age', 'i': Icons.cake, 'c': kOrange, 's': const AgeCalculator()},
-      {'t': 'Date', 'i': Icons.calendar_month, 'c': kBlue, 's': const DateCalculator()},
-      {'t': 'Unit', 'i': Icons.swap_horiz, 'c': kGreen, 's': const UnitConverter()},
-      {'t': 'Tax', 'i': Icons.receipt, 'c': kPurple, 's': const GstCalculator()},
-      {'t': 'Currency', 'i': Icons.currency_exchange, 'c': kYellow, 's': const CurrencyScreen()},
+      {'t': 'Age', 'i': Icons.cake, 'c': Color(0xFFFF6B9D), 's': const AgeCalculator()},
+      {'t': 'Date', 'i': Icons.calendar_month, 'c': Color(0xFF3B82F6), 's': const DateCalculator()},
+      {'t': 'Unit', 'i': Icons.swap_horiz, 'c': Color(0xFF00D09C), 's': const UnitConverter()},
+      {'t': 'Tax', 'i': Icons.receipt, 'c': Color(0xFF8B5CF6), 's': const GstCalculator()},
+      {'t': 'Currency', 'i': Icons.currency_exchange, 'c': Color(0xFFFFA500), 's': const CurrencyScreen()},
     ];
 
     return SafeArea(
@@ -551,17 +535,17 @@ class ToolsScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: kCard,
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: kYellow.withValues(alpha: 0.3)),
+                border: Border.all(color: kRed.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: kYellow.withValues(alpha: 0.2),
+                      color: kRed.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(Icons.lightbulb, color: kYellow, size: 22),
+                    child: const Icon(Icons.lightbulb, color: kRed, size: 22),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
@@ -607,8 +591,9 @@ class ToolsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
+                color: color.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
+                border: Border.all(color: color.withValues(alpha: 0.3)),
               ),
               child: Icon(icon, color: color, size: 26),
             ),
@@ -649,9 +634,10 @@ class CurrencyScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: kCard,
                   shape: BoxShape.circle,
+                  border: Border.all(color: kRed.withValues(alpha: 0.3)),
                 ),
                 child: const Icon(Icons.currency_exchange,
-                    color: kPurpleLight, size: 50),
+                    color: kRed, size: 50),
               ),
               const SizedBox(height: 20),
               Text('Currency Converter',
@@ -681,27 +667,19 @@ class _EmiCalculatorState extends State<EmiCalculator> {
   final _p = TextEditingController(text: '500000');
   final _r = TextEditingController(text: '8.5');
   final _n = TextEditingController(text: '60');
-  String _res = '';
-  double _emi = 0;
-  double _interest = 0;
-  double _total = 0;
+  double _emi = 0, _interest = 0, _total = 0;
 
   void _calc() {
     final p = double.tryParse(_p.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
     final n = double.tryParse(_n.text) ?? 0;
-    if (p <= 0 || r <= 0 || n <= 0) {
-      setState(() => _res = '⚠️ Fill all fields');
-      return;
-    }
+    if (p <= 0 || r <= 0 || n <= 0) return;
     final i = r / 12 / 100;
     final emi = (p * i * pow(1 + i, n)) / (pow(1 + i, n) - 1);
-    final total = emi * n;
     setState(() {
       _emi = emi;
-      _interest = total - p;
-      _total = total;
-      _res = 'done';
+      _total = emi * n;
+      _interest = _total - p;
     });
   }
 
@@ -730,81 +708,20 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             _inputField('Interest Rate (% p.a.)', _r),
             _inputField('Tenure (Months)', _n),
             const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [kPurple, Color(0xFF4A3AFF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: kPurple.withValues(alpha: 0.4),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Text('Monthly EMI',
-                      style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: kTextWhite.withValues(alpha: 0.9))),
-                  const SizedBox(height: 6),
-                  Text('₹ ${_emi.toStringAsFixed(0)}',
-                      style: GoogleFonts.poppins(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: kTextWhite)),
-                  const SizedBox(height: 12),
-                  Divider(color: kTextWhite.withValues(alpha: 0.2)),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Total Interest',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11, color: kTextWhite.withValues(alpha: 0.7))),
-                          Text('₹ ${_interest.toStringAsFixed(0)}',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: kTextWhite)),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text('Total Payment',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11, color: kTextWhite.withValues(alpha: 0.7))),
-                          Text('₹ ${_total.toStringAsFixed(0)}',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w600,
-                                  color: kTextWhite)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
+            _resultCard('Monthly EMI', '₹ ${_emi.toStringAsFixed(0)}',
+                sub1: 'Total Interest', v1: _interest,
+                sub2: 'Total Payment', v2: _total),
             const SizedBox(height: 16),
             SizedBox(
               height: 55,
               child: ElevatedButton(
                 onPressed: _calc,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: kPurple,
+                  backgroundColor: kRed,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
+                  elevation: 8,
+                  shadowColor: kRed.withValues(alpha: 0.5),
                 ),
                 child: Text('Calculate EMI',
                     style: GoogleFonts.poppins(
@@ -892,7 +809,7 @@ class _SipCalculatorState extends State<SipCalculator> {
         {'label': 'Years', 'c': _y},
       ],
       onCalc: _calc,
-      resultWidget: _resultCard('Maturity', _mat,
+      resultWidget: _resultCard('Maturity', '₹ ${_mat.toStringAsFixed(0)}',
           sub1: 'Invested', v1: _inv, sub2: 'Returns', v2: _mat - _inv),
     );
   }
@@ -939,7 +856,7 @@ class _FdCalculatorState extends State<FdCalculator> {
         {'label': 'Years', 'c': _t},
       ],
       onCalc: _calc,
-      resultWidget: _resultCard('Maturity', _mat,
+      resultWidget: _resultCard('Maturity', '₹ ${_mat.toStringAsFixed(0)}',
           sub1: 'Principal', v1: _inv, sub2: 'Interest', v2: _mat - _inv),
     );
   }
@@ -1029,7 +946,7 @@ class _GstCalculatorState extends State<GstCalculator> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 20, vertical: 12),
                     decoration: BoxDecoration(
-                      color: _rate == r ? kPurple : kCard,
+                      color: _rate == r ? kRed : kCard,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text('$r%',
@@ -1054,7 +971,7 @@ class _GstCalculatorState extends State<GstCalculator> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                       decoration: BoxDecoration(
-                        color: selected ? kPurple : kCard,
+                        color: selected ? kRed : kCard,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Center(
@@ -1069,7 +986,7 @@ class _GstCalculatorState extends State<GstCalculator> {
               }).toList(),
             ),
             const SizedBox(height: 24),
-            _resultCard('Total', _total,
+            _resultCard('Total', '₹ ${_total.toStringAsFixed(0)}',
                 sub1: 'Base', v1: _base, sub2: 'GST', v2: _gst),
           ],
         ),
@@ -1124,8 +1041,54 @@ class _BmiCalculatorState extends State<BmiCalculator> {
         {'label': 'Height (cm)', 'c': _h},
       ],
       onCalc: _calc,
-      resultWidget: _resultCard('BMI', _bmi,
-          sub1: 'Category', v1: 0, sub2: '', v2: 0, customCat: _cat),
+      resultWidget: _bmiCard(_bmi, _cat),
+    );
+  }
+
+  Widget _bmiCard(double bmi, String cat) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [kRed, Color(0xFF8B0000)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: kRed.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text('Your BMI',
+              style: GoogleFonts.poppins(
+                  fontSize: 13, color: kTextWhite.withValues(alpha: 0.9))),
+          const SizedBox(height: 6),
+          Text(bmi.toStringAsFixed(1),
+              style: GoogleFonts.poppins(
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                  color: kTextWhite)),
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+            decoration: BoxDecoration(
+              color: kTextWhite.withValues(alpha: 0.2),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(cat,
+                style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextWhite)),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1147,6 +1110,19 @@ class _AgeCalculatorState extends State<AgeCalculator> {
       initialDate: DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: kRed,
+              onPrimary: kTextWhite,
+              surface: kCard,
+              onSurface: kTextWhite,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (d != null) {
       setState(() => _dob = d);
@@ -1197,8 +1173,7 @@ class _AgeCalculatorState extends State<AgeCalculator> {
                   padding: const EdgeInsets.all(20),
                   child: Row(
                     children: [
-                      const Icon(Icons.calendar_today,
-                          color: kPurpleLight),
+                      const Icon(Icons.calendar_today, color: kRed),
                       const SizedBox(width: 14),
                       Text(
                         _dob == null
@@ -1220,8 +1195,15 @@ class _AgeCalculatorState extends State<AgeCalculator> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                      colors: [kPurple, Color(0xFF4A3AFF)]),
+                      colors: [kRed, Color(0xFF8B0000)]),
                   borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kRed.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
@@ -1263,6 +1245,19 @@ class _DateCalculatorState extends State<DateCalculator> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
+      builder: (context, child) {
+        return Theme(
+          data: ThemeData.dark().copyWith(
+            colorScheme: const ColorScheme.dark(
+              primary: kRed,
+              onPrimary: kTextWhite,
+              surface: kCard,
+              onSurface: kTextWhite,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (d != null) {
       setState(() => isStart ? _s = d : _e = d);
@@ -1300,7 +1295,7 @@ class _DateCalculatorState extends State<DateCalculator> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                      colors: [kPurple, Color(0xFF4A3AFF)]),
+                      colors: [kRed, Color(0xFF8B0000)]),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
@@ -1334,7 +1329,7 @@ class _DateCalculatorState extends State<DateCalculator> {
           padding: const EdgeInsets.all(20),
           child: Row(
             children: [
-              const Icon(Icons.calendar_today, color: kPurpleLight),
+              const Icon(Icons.calendar_today, color: kRed),
               const SizedBox(width: 14),
               Text(
                 d == null ? label : '${d.day}/${d.month}/${d.year}',
@@ -1434,7 +1429,7 @@ class _UnitConverterState extends State<UnitConverter> {
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 10),
                     decoration: BoxDecoration(
-                      color: sel ? kPurple : kCard,
+                      color: sel ? kRed : kCard,
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -1485,7 +1480,7 @@ class _UnitConverterState extends State<UnitConverter> {
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                      colors: [kPurple, Color(0xFF4A3AFF)]),
+                      colors: [kRed, Color(0xFF8B0000)]),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
@@ -1600,24 +1595,23 @@ Widget _simpleCalc({
   );
 }
 
-Widget _resultCard(String title, double value,
+Widget _resultCard(String title, String value,
     {required String sub1,
     required double v1,
     required String sub2,
-    required double v2,
-    String? customCat}) {
+    required double v2}) {
   return Container(
     padding: const EdgeInsets.all(24),
     decoration: BoxDecoration(
       gradient: const LinearGradient(
-        colors: [kPurple, Color(0xFF4A3AFF)],
+        colors: [kRed, Color(0xFF8B0000)],
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
       ),
       borderRadius: BorderRadius.circular(20),
       boxShadow: [
         BoxShadow(
-          color: kPurple.withValues(alpha: 0.4),
+          color: kRed.withValues(alpha: 0.4),
           blurRadius: 20,
           offset: const Offset(0, 8),
         ),
@@ -1629,55 +1623,47 @@ Widget _resultCard(String title, double value,
             style: GoogleFonts.poppins(
                 fontSize: 13, color: kTextWhite.withValues(alpha: 0.9))),
         const SizedBox(height: 6),
-        Text(value.toStringAsFixed(0),
+        Text(value,
             style: GoogleFonts.poppins(
                 fontSize: 32,
                 fontWeight: FontWeight.bold,
                 color: kTextWhite)),
-        if (customCat != null) ...[
-          const SizedBox(height: 4),
-          Text(customCat,
-              style: GoogleFonts.poppins(fontSize: 14, color: kTextWhite)),
-        ],
-        if (sub1.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          Divider(color: kTextWhite.withValues(alpha: 0.2)),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(sub1,
-                      style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: kTextWhite.withValues(alpha: 0.7))),
-                  Text('₹ ${v1.toStringAsFixed(0)}',
-                      style: GoogleFonts.poppins(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: kTextWhite)),
-                ],
-              ),
-              if (sub2.isNotEmpty)
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(sub2,
-                        style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            color: kTextWhite.withValues(alpha: 0.7))),
-                    Text('₹ ${v2.toStringAsFixed(0)}',
-                        style: GoogleFonts.poppins(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: kTextWhite)),
-                  ],
-                ),
-            ],
-          ),
-        ],
+        const SizedBox(height: 12),
+        Divider(color: kTextWhite.withValues(alpha: 0.2)),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(sub1,
+                    style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: kTextWhite.withValues(alpha: 0.7))),
+                Text('₹ ${v1.toStringAsFixed(0)}',
+                    style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: kTextWhite)),
+              ],
+            ),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(sub2,
+                    style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: kTextWhite.withValues(alpha: 0.7))),
+                Text('₹ ${v2.toStringAsFixed(0)}',
+                    style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: kTextWhite)),
+              ],
+            ),
+          ],
+        ),
       ],
     ),
   );
