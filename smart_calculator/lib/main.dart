@@ -5,14 +5,13 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'dart:math';
 
-// ═══════ COLORS (Black + Red Theme) ═══════
-const kBg = Color(0xFF000000);           // Pure Black
-const kCard = Color(0xFF1A1A1A);         // Dark Grey Card
-const kCard2 = Color(0xFF262626);        // Lighter Grey
-const kRed = Color(0xFFFF2E2E);          // Bright Red
-const kRedDark = Color(0xFFCC1F1F);      // Dark Red
-const kRedGlow = Color(0xFFFF4444);      // Red Glow
-const kGrey = Color(0xFF2E2E2E);         // Button Grey
+// ═══════ COLORS ═══════
+const kBg = Color(0xFF000000);
+const kCard = Color(0xFF1A1A1A);
+const kCard2 = Color(0xFF262626);
+const kRed = Color(0xFFE63946);
+const kRedDark = Color(0xFF8B0000);
+const kGrey = Color(0xFF2A2A2A);
 const kTextWhite = Color(0xFFFFFFFF);
 const kTextGrey = Color(0xFF9B9B9B);
 
@@ -125,11 +124,8 @@ class BasicCalculator extends StatefulWidget {
 
 class _BasicCalculatorState extends State<BasicCalculator> {
   String _display = '0';
-
-  // ✅ Soft Red (thoda dark)
   static const Color softRed = Color(0xFFE63946);
   static const Color darkGrey = Color(0xFF2A2A2A);
-  static const Color lightGrey = Color(0xFF3A3A3A);
 
   void _onKey(String v) {
     setState(() {
@@ -180,7 +176,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return double.parse(s);
   }
 
-  // ✅ FIXED: Clean colors, no bright/muddy issues
   Widget _btn(String label, {Color? bg, Color? fg}) {
     return Expanded(
       child: Padding(
@@ -215,7 +210,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return SafeArea(
       child: Column(
         children: [
-          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Row(
@@ -238,7 +232,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
               ],
             ),
           ),
-          // Display
           Expanded(
             flex: 2,
             child: Container(
@@ -258,50 +251,39 @@ class _BasicCalculatorState extends State<BasicCalculator> {
               ),
             ),
           ),
-          // Keypad
           Expanded(
             flex: 5,
             child: Padding(
               padding: const EdgeInsets.all(10),
               child: Column(
                 children: [
-                  // Row 1: C, ⌫, %, ÷
                   Row(children: [
-                    // C - soft red background, white text
                     _btn('C', bg: softRed, fg: kTextWhite),
-                    // Backspace - dark grey with red icon color
                     _btn('⌫', bg: darkGrey, fg: softRed),
-                    // % - dark grey, white text
                     _btn('%', bg: darkGrey, fg: kTextWhite),
-                    // ÷ - dark grey with red text
                     _btn('÷', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 2: 7, 8, 9, ×
                   Row(children: [
                     _btn('7'),
                     _btn('8'),
                     _btn('9'),
                     _btn('×', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 3: 4, 5, 6, −
                   Row(children: [
                     _btn('4'),
                     _btn('5'),
                     _btn('6'),
                     _btn('-', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 4: 1, 2, 3, +
                   Row(children: [
                     _btn('1'),
                     _btn('2'),
                     _btn('3'),
                     _btn('+', bg: darkGrey, fg: softRed),
                   ]),
-                  // ✅ Row 5: 0, ., = (SIRF EK '=' button)
                   Row(children: [
                     _btn('0'),
                     _btn('.'),
-                    // '=' button - double width, soft red
                     Expanded(
                       flex: 2,
                       child: Padding(
@@ -383,14 +365,12 @@ class FinanceScreen extends StatelessWidget {
             Text('Everything you need to plan finances',
                 style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
             const SizedBox(height: 20),
-
-            // Portfolio Card - Red Gradient
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
-                  colors: [kRed, Color(0xFF8B0000)],
+                  colors: [kRed, kRedDark],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -431,14 +411,12 @@ class FinanceScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-
             Text('Calculators',
                 style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                     color: kTextWhite)),
             const SizedBox(height: 12),
-
             ...items.map((it) => Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _modernCard(
@@ -542,7 +520,6 @@ class ToolsScreen extends StatelessWidget {
             Text('Finance & Tools',
                 style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
             const SizedBox(height: 20),
-
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -567,7 +544,6 @@ class ToolsScreen extends StatelessWidget {
               },
             ),
             const SizedBox(height: 24),
-
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -718,7 +694,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     final emi = (p * monthlyRate * pow(1 + monthlyRate, n)) /
         (pow(1 + monthlyRate, n) - 1);
 
-    // ✅ Amortization Schedule
     double balance = p;
     List<Map<String, dynamic>> schedule = [];
     for (int i = 1; i <= n; i++) {
@@ -748,14 +723,9 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     _calc();
   }
 
-  // ✅ PDF Generate with Full Amortization Schedule
   Future<void> _generatePdf() async {
     final pdf = pw.Document();
-    final now = DateTime.now();
-    final dateStr =
-        '${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
-
-    // Colors
+    final dateStr = _pdfDate();
     final redColor = PdfColor.fromHex('#E63946');
     final lightRed = PdfColor.fromHex('#FFF0F0');
 
@@ -789,101 +759,23 @@ class _EmiCalculatorState extends State<EmiCalculator> {
           ),
         ),
         build: (context) => [
-          // ═══ HEADER ═══
-          pw.Container(
-            padding: const pw.EdgeInsets.all(16),
-            decoration: pw.BoxDecoration(
-              color: redColor,
-              borderRadius: pw.BorderRadius.circular(8),
-            ),
-            child: pw.Row(
-              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-              children: [
-                pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Text('EMI CALCULATION',
-                        style: pw.TextStyle(
-                            fontSize: 20,
-                            fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.white)),
-                    pw.SizedBox(height: 4),
-                    pw.Text('Smart Calculator',
-                        style: const pw.TextStyle(
-                            fontSize: 12, color: PdfColors.white)),
-                  ],
-                ),
-                pw.Text('Generated:\n$dateStr',
-                    textAlign: pw.TextAlign.right,
-                    style: const pw.TextStyle(
-                        fontSize: 10, color: PdfColors.white)),
-              ],
-            ),
+          pdfHeader('EMI CALCULATION', 'Smart Calculator', dateStr),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Loan Details'),
+          pdfRow('Loan Amount', 'Rs. ${_p.text}'),
+          pdfRow('Interest Rate', '${_r.text}% p.a.'),
+          pdfRow('Tenure', '${_n.text} Months'),
+          pw.SizedBox(height: 20),
+          pdfSummaryBox(
+            label: 'Monthly EMI',
+            value: 'Rs. ${_emi.toStringAsFixed(2)}',
+            sub1: 'Principal',
+            v1: 'Rs. ${_p.text}',
+            sub2: 'Total Interest',
+            v2: 'Rs. ${_interest.toStringAsFixed(2)}',
           ),
-
           pw.SizedBox(height: 20),
-
-          // ═══ LOAN DETAILS ═══
-          pw.Text('Loan Details',
-              style: pw.TextStyle(
-                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 10),
-          _pdfRow('Loan Amount', 'Rs. ${_p.text}'),
-          _pdfRow('Interest Rate', '${_r.text}% p.a.'),
-          _pdfRow('Tenure', '${_n.text} Months'),
-
-          pw.SizedBox(height: 20),
-
-          // ═══ SUMMARY BOX ═══
-          pw.Container(
-            padding: const pw.EdgeInsets.all(16),
-            decoration: pw.BoxDecoration(
-              color: lightRed,
-              borderRadius: pw.BorderRadius.circular(8),
-              border: pw.Border.all(color: redColor, width: 1.5),
-            ),
-            child: pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Text('Monthly EMI',
-                    style: const pw.TextStyle(
-                        fontSize: 11, color: PdfColors.grey700)),
-                pw.SizedBox(height: 4),
-                pw.Text('Rs. ${_emi.toStringAsFixed(2)}',
-                    style: pw.TextStyle(
-                        fontSize: 24,
-                        fontWeight: pw.FontWeight.bold,
-                        color: redColor)),
-                pw.SizedBox(height: 12),
-                pw.Divider(color: PdfColors.grey400, height: 1),
-                pw.SizedBox(height: 8),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    _pdfSummary('Principal',
-                        'Rs. ${_p.text}'),
-                    _pdfSummary('Total Interest',
-                        'Rs. ${_interest.toStringAsFixed(2)}'),
-                    _pdfSummary('Total Payment',
-                        'Rs. ${_total.toStringAsFixed(2)}'),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          pw.SizedBox(height: 20),
-
-          // ═══ AMORTIZATION SCHEDULE ═══
-          pw.Text('Month-wise Payment Schedule',
-              style: pw.TextStyle(
-                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 4),
-          pw.Text('(Breakdown of each EMI payment)',
-              style: const pw.TextStyle(
-                  fontSize: 10, color: PdfColors.grey600)),
-          pw.SizedBox(height: 10),
-
+          pdfSectionTitle('Month-wise Payment Schedule'),
           pw.Table(
             border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
             columnWidths: const {
@@ -894,42 +786,28 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               4: pw.FlexColumnWidth(1.6),
             },
             children: [
-              // Header row
-              pw.TableRow(
-                decoration: pw.BoxDecoration(color: redColor),
-                children: [
-                  _pdfHeaderCell('Month'),
-                  _pdfHeaderCell('EMI'),
-                  _pdfHeaderCell('Interest'),
-                  _pdfHeaderCell('Principal'),
-                  _pdfHeaderCell('Balance'),
-                ],
-              ),
-              // Data rows
-              ..._schedule.asMap().entries.map((entry) {
-                final i = entry.key;
-                final row = entry.value;
-                // Alternate row color
+              pdfTableHeaderRow(
+                  ['Month', 'EMI', 'Interest', 'Principal', 'Balance']),
+              ..._schedule.asMap().entries.map((e) {
+                final i = e.key;
+                final row = e.value;
                 final isEven = i % 2 == 0;
                 return pw.TableRow(
                   decoration: pw.BoxDecoration(
                     color: isEven ? PdfColors.white : PdfColor.fromHex('#F8F8F8'),
                   ),
                   children: [
-                    _pdfDataCell('${row['month']}'),
-                    _pdfDataCell('Rs. ${(row['emi'] as double).toStringAsFixed(2)}'),
-                    _pdfDataCell('Rs. ${(row['interest'] as double).toStringAsFixed(2)}'),
-                    _pdfDataCell('Rs. ${(row['principal'] as double).toStringAsFixed(2)}'),
-                    _pdfDataCell('Rs. ${(row['balance'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell('${row['month']}'),
+                    pdfDataCell('Rs. ${(row['emi'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell('Rs. ${(row['interest'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell('Rs. ${(row['principal'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell('Rs. ${(row['balance'] as double).toStringAsFixed(2)}'),
                   ],
                 );
               }),
             ],
           ),
-
           pw.SizedBox(height: 20),
-
-          // ═══ TOTALS FOOTER ═══
           pw.Container(
             padding: const pw.EdgeInsets.all(12),
             decoration: pw.BoxDecoration(
@@ -960,59 +838,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     );
   }
 
-  pw.Widget _pdfRow(String label, String value) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 5),
-      child: pw.Row(
-        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-        children: [
-          pw.Text(label,
-              style: const pw.TextStyle(
-                  fontSize: 11, color: PdfColors.grey700)),
-          pw.Text(value,
-              style: pw.TextStyle(
-                  fontSize: 11, fontWeight: pw.FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  pw.Widget _pdfSummary(String label, String value) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(label,
-            style:
-                const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
-        pw.SizedBox(height: 2),
-        pw.Text(value,
-            style: pw.TextStyle(
-                fontSize: 11, fontWeight: pw.FontWeight.bold)),
-      ],
-    );
-  }
-
-  pw.Widget _pdfHeaderCell(String text) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.all(6),
-      child: pw.Text(text,
-          textAlign: pw.TextAlign.center,
-          style: pw.TextStyle(
-              fontSize: 9,
-              fontWeight: pw.FontWeight.bold,
-              color: PdfColors.white)),
-    );
-  }
-
-  pw.Widget _pdfDataCell(String text) {
-    return pw.Padding(
-      padding: const pw.EdgeInsets.all(6),
-      child: pw.Text(text,
-          textAlign: pw.TextAlign.center,
-          style: const pw.TextStyle(fontSize: 8.5)),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1032,22 +857,20 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             _inputField('Interest Rate (% p.a.)', _r),
             _inputField('Tenure (Months)', _n),
             const SizedBox(height: 10),
-
-            // Result Card - Clickable
             GestureDetector(
               onTap: _generatePdf,
               child: Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Color(0xFFE63946), Color(0xFF8B0000)],
+                    colors: [kRed, kRedDark],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFE63946).withValues(alpha: 0.4),
+                      color: kRed.withValues(alpha: 0.4),
                       blurRadius: 20,
                       offset: const Offset(0, 8),
                     ),
@@ -1064,8 +887,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                         Text('Tap to Download PDF',
                             style: GoogleFonts.poppins(
                                 fontSize: 11,
-                                color: Colors.white.withValues(alpha: 0.9),
-                                fontWeight: FontWeight.w500)),
+                                color: Colors.white.withValues(alpha: 0.9))),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -1091,8 +913,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                             Text('Total Interest',
                                 style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color: Colors.white
-                                        .withValues(alpha: 0.7))),
+                                    color:
+                                        Colors.white.withValues(alpha: 0.7))),
                             Text('Rs. ${_interest.toStringAsFixed(0)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
@@ -1106,8 +928,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                             Text('Total Payment',
                                 style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color: Colors.white
-                                        .withValues(alpha: 0.7))),
+                                    color:
+                                        Colors.white.withValues(alpha: 0.7))),
                             Text('Rs. ${_total.toStringAsFixed(0)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
@@ -1122,8 +944,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Calculate Button
             SizedBox(
               height: 55,
               child: ElevatedButton.icon(
@@ -1135,30 +955,25 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                         fontWeight: FontWeight.w600,
                         color: Colors.white)),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE63946),
+                  backgroundColor: kRed,
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
-                  elevation: 8,
                 ),
               ),
             ),
             const SizedBox(height: 12),
-
-            // PDF Download Button
             SizedBox(
               height: 55,
               child: OutlinedButton.icon(
                 onPressed: _generatePdf,
-                icon: const Icon(Icons.picture_as_pdf,
-                    color: Color(0xFFE63946)),
+                icon: const Icon(Icons.picture_as_pdf, color: kRed),
                 label: Text('Download PDF Statement',
                     style: GoogleFonts.poppins(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFFE63946))),
+                        color: kRed)),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: Color(0xFFE63946), width: 2),
+                  side: const BorderSide(color: kRed, width: 2),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                 ),
@@ -1190,8 +1005,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
               ),
-              contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 16),
+              contentPadding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             ),
             onChanged: (_) => _calc(),
           ),
@@ -1200,6 +1015,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     );
   }
 }
+
 // ═══════ SIP ═══════
 class SipCalculator extends StatefulWidget {
   const SipCalculator({super.key});
@@ -1212,17 +1028,40 @@ class _SipCalculatorState extends State<SipCalculator> {
   final _r = TextEditingController(text: '12');
   final _y = TextEditingController(text: '10');
   double _mat = 0, _inv = 0;
+  List<Map<String, dynamic>> _schedule = [];
 
   void _calc() {
     final m = double.tryParse(_m.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
-    final y = double.tryParse(_y.text) ?? 0;
+    final y = double.tryParse(_y.text)?.toInt() ?? 0;
     if (m <= 0 || r <= 0 || y <= 0) return;
     final i = r / 12 / 100;
     final n = y * 12;
+
+    List<Map<String, dynamic>> schedule = [];
+    double cumulativeInv = 0;
+    double cumulativeVal = 0;
+    for (int yr = 1; yr <= y; yr++) {
+      double yearInv = 0;
+      for (int mth = 0; mth < 12; mth++) {
+        yearInv += m;
+        cumulativeInv += m;
+        cumulativeVal = (cumulativeVal + m) * (1 + i);
+      }
+      schedule.add({
+        'year': yr,
+        'yearly': yearInv,
+        'invested': cumulativeInv,
+        'value': cumulativeVal,
+        'returns': cumulativeVal - cumulativeInv,
+      });
+    }
+    final mat = m * ((pow(1 + i, n) - 1) / i) * (1 + i);
+    final inv = m * n;
     setState(() {
-      _mat = m * ((pow(1 + i, n) - 1) / i) * (1 + i);
-      _inv = m * n;
+      _mat = mat;
+      _inv = inv;
+      _schedule = schedule;
     });
   }
 
@@ -1232,18 +1071,201 @@ class _SipCalculatorState extends State<SipCalculator> {
     _calc();
   }
 
+  Future<void> _generatePdf() async {
+    final pdf = pw.Document();
+    final dateStr = _pdfDate();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        footer: (context) => pw.Container(
+          padding: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'Computer-generated statement from Smart Calculator App.',
+            style:
+                const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            textAlign: pw.TextAlign.center,
+          ),
+        ),
+        build: (context) => [
+          pdfHeader('SIP CALCULATION', 'Smart Calculator - Mutual Fund',
+              dateStr),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Investment Details'),
+          pdfRow('Monthly SIP', 'Rs. ${_m.text}'),
+          pdfRow('Expected Return', '${_r.text}% p.a.'),
+          pdfRow('Time Period', '${_y.text} Years'),
+          pw.SizedBox(height: 16),
+          pdfSummaryBox(
+            label: 'Maturity Value',
+            value: 'Rs. ${_mat.toStringAsFixed(2)}',
+            sub1: 'Invested',
+            v1: 'Rs. ${_inv.toStringAsFixed(2)}',
+            sub2: 'Est. Returns',
+            v2: 'Rs. ${(_mat - _inv).toStringAsFixed(2)}',
+          ),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Year-wise Growth'),
+          pw.Table(
+            border:
+                pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(0.7),
+              1: pw.FlexColumnWidth(1.2),
+              2: pw.FlexColumnWidth(1.2),
+              3: pw.FlexColumnWidth(1.3),
+              4: pw.FlexColumnWidth(1.2),
+            },
+            children: [
+              pdfTableHeaderRow(
+                  ['Year', 'Yearly SIP', 'Invested', 'Value', 'Returns']),
+              ..._schedule.asMap().entries.map((e) {
+                final r = e.value;
+                final isEven = e.key % 2 == 0;
+                return pw.TableRow(
+                  decoration: pw.BoxDecoration(
+                      color: isEven
+                          ? PdfColors.white
+                          : PdfColor.fromHex('#F8F8F8')),
+                  children: [
+                    pdfDataCell('${r['year']}'),
+                    pdfDataCell(
+                        'Rs. ${(r['yearly'] as double).toStringAsFixed(0)}'),
+                    pdfDataCell(
+                        'Rs. ${(r['invested'] as double).toStringAsFixed(0)}'),
+                    pdfDataCell(
+                        'Rs. ${(r['value'] as double).toStringAsFixed(0)}'),
+                    pdfDataCell(
+                        'Rs. ${(r['returns'] as double).toStringAsFixed(0)}'),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+      name: 'SIP_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return _simpleCalc(
       title: 'SIP Calculator',
       fields: [
-        {'label': 'Monthly (₹)', 'c': _m},
+        {'label': 'Monthly (Rs.)', 'c': _m},
         {'label': 'Return (% p.a.)', 'c': _r},
         {'label': 'Years', 'c': _y},
       ],
       onCalc: _calc,
-      resultWidget: _resultCard('Maturity', '₹ ${_mat.toStringAsFixed(0)}',
-          sub1: 'Invested', v1: _inv, sub2: 'Returns', v2: _mat - _inv),
+      resultWidget: Column(
+        children: [
+          GestureDetector(
+            onTap: _generatePdf,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [kRed, kRedDark]),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: kRed.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.picture_as_pdf,
+                          color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                      Text('Tap to Download PDF',
+                          style: GoogleFonts.poppins(
+                              fontSize: 10, color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Maturity Value',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, color: Colors.white)),
+                  const SizedBox(height: 4),
+                  Text('Rs. ${_mat.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                  const SizedBox(height: 10),
+                  Divider(color: Colors.white.withValues(alpha: 0.2)),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Invested',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7))),
+                          Text('Rs. ${_inv.toStringAsFixed(0)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Returns',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7))),
+                          Text('Rs. ${(_mat - _inv).toStringAsFixed(0)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: _generatePdf,
+              icon: const Icon(Icons.picture_as_pdf, color: kRed),
+              label: Text('Download PDF Statement',
+                  style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: kRed)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: kRed, width: 2),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1259,17 +1281,36 @@ class _FdCalculatorState extends State<FdCalculator> {
   final _p = TextEditingController(text: '100000');
   final _r = TextEditingController(text: '7.5');
   final _t = TextEditingController(text: '5');
-  double _mat = 0, _inv = 0;
+  double _mat = 0, _int = 0;
+  List<Map<String, dynamic>> _schedule = [];
 
   void _calc() {
     final p = double.tryParse(_p.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
-    final t = double.tryParse(_t.text) ?? 0;
+    final t = double.tryParse(_t.text)?.toInt() ?? 0;
     if (p <= 0 || r <= 0 || t <= 0) return;
     const n = 4;
+    final mat = p * pow(1 + (r / 100) / n, n * t);
+
+    List<Map<String, dynamic>> schedule = [];
+    double balance = p;
+    for (int yr = 1; yr <= t; yr++) {
+      double openBal = balance;
+      for (int q = 0; q < 4; q++) {
+        balance = balance * (1 + (r / 100) / 4);
+      }
+      schedule.add({
+        'year': yr,
+        'opening': openBal,
+        'closing': balance,
+        'interest': balance - openBal,
+      });
+    }
+
     setState(() {
-      _mat = p * pow(1 + (r / 100) / n, n * t);
-      _inv = p;
+      _mat = mat;
+      _int = mat - p;
+      _schedule = schedule;
     });
   }
 
@@ -1279,18 +1320,199 @@ class _FdCalculatorState extends State<FdCalculator> {
     _calc();
   }
 
+  Future<void> _generatePdf() async {
+    final pdf = pw.Document();
+    final dateStr = _pdfDate();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        footer: (context) => pw.Container(
+          padding: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'Computer-generated FD maturity statement.',
+            style:
+                const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            textAlign: pw.TextAlign.center,
+          ),
+        ),
+        build: (context) => [
+          pdfHeader('FD MATURITY CERTIFICATE',
+              'Smart Calculator - Fixed Deposit', dateStr),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Deposit Details'),
+          pdfRow('Principal Amount', 'Rs. ${_p.text}'),
+          pdfRow('Interest Rate', '${_r.text}% p.a.'),
+          pdfRow('Tenure', '${_t.text} Years'),
+          pdfRow('Compounding', 'Quarterly'),
+          pw.SizedBox(height: 16),
+          pdfSummaryBox(
+            label: 'Maturity Amount',
+            value: 'Rs. ${_mat.toStringAsFixed(2)}',
+            sub1: 'Principal',
+            v1: 'Rs. ${_p.text}',
+            sub2: 'Interest Earned',
+            v2: 'Rs. ${_int.toStringAsFixed(2)}',
+          ),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Year-wise Breakdown'),
+          pw.Table(
+            border:
+                pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(0.7),
+              1: pw.FlexColumnWidth(1.5),
+              2: pw.FlexColumnWidth(1.3),
+              3: pw.FlexColumnWidth(1.5),
+            },
+            children: [
+              pdfTableHeaderRow(
+                  ['Year', 'Opening', 'Interest', 'Closing']),
+              ..._schedule.asMap().entries.map((e) {
+                final r = e.value;
+                final isEven = e.key % 2 == 0;
+                return pw.TableRow(
+                  decoration: pw.BoxDecoration(
+                      color: isEven
+                          ? PdfColors.white
+                          : PdfColor.fromHex('#F8F8F8')),
+                  children: [
+                    pdfDataCell('${r['year']}'),
+                    pdfDataCell(
+                        'Rs. ${(r['opening'] as double).toStringAsFixed(0)}'),
+                    pdfDataCell(
+                        'Rs. ${(r['interest'] as double).toStringAsFixed(0)}'),
+                    pdfDataCell(
+                        'Rs. ${(r['closing'] as double).toStringAsFixed(0)}'),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+      name: 'FD_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return _simpleCalc(
       title: 'FD Calculator',
       fields: [
-        {'label': 'Principal (₹)', 'c': _p},
+        {'label': 'Principal (Rs.)', 'c': _p},
         {'label': 'Rate (% p.a.)', 'c': _r},
         {'label': 'Years', 'c': _t},
       ],
       onCalc: _calc,
-      resultWidget: _resultCard('Maturity', '₹ ${_mat.toStringAsFixed(0)}',
-          sub1: 'Principal', v1: _inv, sub2: 'Interest', v2: _mat - _inv),
+      resultWidget: Column(
+        children: [
+          GestureDetector(
+            onTap: _generatePdf,
+            child: Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [kRed, kRedDark]),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: kRed.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.picture_as_pdf,
+                          color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                      Text('Tap to Download PDF',
+                          style: GoogleFonts.poppins(
+                              fontSize: 10, color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Maturity Amount',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13, color: Colors.white)),
+                  const SizedBox(height: 4),
+                  Text('Rs. ${_mat.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                  const SizedBox(height: 10),
+                  Divider(color: Colors.white.withValues(alpha: 0.2)),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Principal',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7))),
+                          Text('Rs. ${_p.text}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Interest',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7))),
+                          Text('Rs. ${_int.toStringAsFixed(0)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: _generatePdf,
+              icon: const Icon(Icons.picture_as_pdf, color: kRed),
+              label: Text('Download FD Certificate',
+                  style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: kRed)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: kRed, width: 2),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -1345,7 +1567,7 @@ class _GstCalculatorState extends State<GstCalculator> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Amount (₹)',
+            Text('Amount (Rs.)',
                 style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
             const SizedBox(height: 6),
             TextField(
@@ -1358,8 +1580,8 @@ class _GstCalculatorState extends State<GstCalculator> {
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
               onChanged: (_) => _calc(),
             ),
@@ -1419,8 +1641,66 @@ class _GstCalculatorState extends State<GstCalculator> {
               }).toList(),
             ),
             const SizedBox(height: 24),
-            _resultCard('Total', '₹ ${_total.toStringAsFixed(0)}',
-                sub1: 'Base', v1: _base, sub2: 'GST', v2: _gst),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                    colors: [kRed, kRedDark]),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Column(
+                children: [
+                  Text('Total Amount',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.9))),
+                  const SizedBox(height: 6),
+                  Text('Rs. ${_total.toStringAsFixed(2)}',
+                      style: GoogleFonts.poppins(
+                          fontSize: 30,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                  const SizedBox(height: 12),
+                  Divider(color: Colors.white.withValues(alpha: 0.2)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Base Amount',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7))),
+                          Text('Rs. ${_base.toStringAsFixed(2)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('GST ($_rate%)',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11,
+                                  color:
+                                      Colors.white.withValues(alpha: 0.7))),
+                          Text('Rs. ${_gst.toStringAsFixed(2)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),
@@ -1474,53 +1754,47 @@ class _BmiCalculatorState extends State<BmiCalculator> {
         {'label': 'Height (cm)', 'c': _h},
       ],
       onCalc: _calc,
-      resultWidget: _bmiCard(_bmi, _cat),
-    );
-  }
-
-  Widget _bmiCard(double bmi, String cat) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [kRed, Color(0xFF8B0000)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: kRed.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text('Your BMI',
-              style: GoogleFonts.poppins(
-                  fontSize: 13, color: kTextWhite.withValues(alpha: 0.9))),
-          const SizedBox(height: 6),
-          Text(bmi.toStringAsFixed(1),
-              style: GoogleFonts.poppins(
-                  fontSize: 42,
-                  fontWeight: FontWeight.bold,
-                  color: kTextWhite)),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: kTextWhite.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
+      resultWidget: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          gradient: const LinearGradient(colors: [kRed, kRedDark]),
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: kRed.withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-            child: Text(cat,
+          ],
+        ),
+        child: Column(
+          children: [
+            Text('Your BMI',
                 style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: kTextWhite)),
-          ),
-        ],
+                    fontSize: 13,
+                    color: Colors.white.withValues(alpha: 0.9))),
+            const SizedBox(height: 6),
+            Text(_bmi.toStringAsFixed(1),
+                style: GoogleFonts.poppins(
+                    fontSize: 42,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white)),
+            const SizedBox(height: 8),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(_cat,
+                  style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.white)),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1627,30 +1901,23 @@ class _AgeCalculatorState extends State<AgeCalculator> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [kRed, Color(0xFF8B0000)]),
+                  gradient:
+                      const LinearGradient(colors: [kRed, kRedDark]),
                   borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: kRed.withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
                 ),
                 child: Column(
                   children: [
                     Text('Your Age',
                         style: GoogleFonts.poppins(
                             fontSize: 13,
-                            color: kTextWhite.withValues(alpha: 0.9))),
+                            color: Colors.white.withValues(alpha: 0.9))),
                     const SizedBox(height: 8),
                     Text(_res,
                         textAlign: TextAlign.center,
                         style: GoogleFonts.poppins(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: kTextWhite)),
+                            color: Colors.white)),
                   ],
                 ),
               ),
@@ -1727,21 +1994,21 @@ class _DateCalculatorState extends State<DateCalculator> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [kRed, Color(0xFF8B0000)]),
+                  gradient:
+                      const LinearGradient(colors: [kRed, kRedDark]),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   children: [
                     Text('Difference',
                         style: GoogleFonts.poppins(
-                            fontSize: 13, color: kTextWhite)),
+                            fontSize: 13, color: Colors.white)),
                     const SizedBox(height: 8),
                     Text(_res,
                         style: GoogleFonts.poppins(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: kTextWhite)),
+                            color: Colors.white)),
                   ],
                 ),
               ),
@@ -1794,11 +2061,27 @@ class _UnitConverterState extends State<UnitConverter> {
   String _res = '';
 
   final Map<String, Map<String, double>> _units = {
-    'length': {'m': 1, 'km': 1000, 'cm': 0.01, 'mm': 0.001, 'inch': 0.0254, 'ft': 0.3048, 'mile': 1609.34},
-    'weight': {'kg': 1, 'g': 0.001, 'mg': 0.000001, 'ton': 1000, 'lb': 0.453592, 'oz': 0.0283495},
+    'length': {
+      'm': 1,
+      'km': 1000,
+      'cm': 0.01,
+      'mm': 0.001,
+      'inch': 0.0254,
+      'ft': 0.3048,
+      'mile': 1609.34
+    },
+    'weight': {
+      'kg': 1,
+      'g': 0.001,
+      'mg': 0.000001,
+      'ton': 1000,
+      'lb': 0.453592,
+      'oz': 0.0283495
+    },
   };
 
-  List<String> get _u => _cat == 'temp' ? ['C', 'F', 'K'] : _units[_cat]!.keys.toList();
+  List<String> get _u =>
+      _cat == 'temp' ? ['C', 'F', 'K'] : _units[_cat]!.keys.toList();
 
   void _convert() {
     final v = double.tryParse(_val.text) ?? 0;
@@ -1866,7 +2149,9 @@ class _UnitConverterState extends State<UnitConverter> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      c == 'length' ? 'Length' : (c == 'weight' ? 'Weight' : 'Temp'),
+                      c == 'length'
+                          ? 'Length'
+                          : (c == 'weight' ? 'Weight' : 'Temp'),
                       style: GoogleFonts.poppins(
                           color: kTextWhite, fontWeight: FontWeight.w500),
                     ),
@@ -1888,20 +2173,22 @@ class _UnitConverterState extends State<UnitConverter> {
                 border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(14),
                     borderSide: BorderSide.none),
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               ),
               onChanged: (_) => _convert(),
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _dropDown('From', _from, _u, (v) {
+                Expanded(
+                    child: _dropDown('From', _from, _u, (v) {
                   setState(() => _from = v!);
                   _convert();
                 })),
                 const SizedBox(width: 12),
-                Expanded(child: _dropDown('To', _to, _u, (v) {
+                Expanded(
+                    child: _dropDown('To', _to, _u, (v) {
                   setState(() => _to = v!);
                   _convert();
                 })),
@@ -1912,8 +2199,8 @@ class _UnitConverterState extends State<UnitConverter> {
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                      colors: [kRed, Color(0xFF8B0000)]),
+                  gradient:
+                      const LinearGradient(colors: [kRed, kRedDark]),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
@@ -1921,13 +2208,13 @@ class _UnitConverterState extends State<UnitConverter> {
                     Text('Result',
                         style: GoogleFonts.poppins(
                             fontSize: 13,
-                            color: kTextWhite.withValues(alpha: 0.9))),
+                            color: Colors.white.withValues(alpha: 0.9))),
                     const SizedBox(height: 8),
                     Text(_res,
                         style: GoogleFonts.poppins(
                             fontSize: 28,
                             fontWeight: FontWeight.bold,
-                            color: kTextWhite)),
+                            color: Colors.white)),
                   ],
                 ),
               ),
@@ -2028,76 +2315,162 @@ Widget _simpleCalc({
   );
 }
 
-Widget _resultCard(String title, String value,
-    {required String sub1,
-    required double v1,
-    required String sub2,
-    required double v2}) {
-  return Container(
-    padding: const EdgeInsets.all(24),
-    decoration: BoxDecoration(
-      gradient: const LinearGradient(
-        colors: [kRed, Color(0xFF8B0000)],
-        begin: Alignment.topLeft,
-        end: Alignment.bottomRight,
-      ),
-      borderRadius: BorderRadius.circular(20),
-      boxShadow: [
-        BoxShadow(
-          color: kRed.withValues(alpha: 0.4),
-          blurRadius: 20,
-          offset: const Offset(0, 8),
-        ),
-      ],
+// ═══════ PDF HELPERS ═══════
+pw.Widget pdfHeader(String title, String subtitle, String date) {
+  return pw.Container(
+    padding: const pw.EdgeInsets.all(16),
+    decoration: pw.BoxDecoration(
+      color: PdfColor.fromHex('#E63946'),
+      borderRadius: pw.BorderRadius.circular(8),
     ),
-    child: Column(
+    child: pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        Text(title,
-            style: GoogleFonts.poppins(
-                fontSize: 13, color: kTextWhite.withValues(alpha: 0.9))),
-        const SizedBox(height: 6),
-        Text(value,
-            style: GoogleFonts.poppins(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: kTextWhite)),
-        const SizedBox(height: 12),
-        Divider(color: kTextWhite.withValues(alpha: 0.2)),
-        const SizedBox(height: 8),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        pw.Column(
+          crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(sub1,
-                    style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: kTextWhite.withValues(alpha: 0.7))),
-                Text('₹ ${v1.toStringAsFixed(0)}',
-                    style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: kTextWhite)),
-              ],
-            ),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(sub2,
-                    style: GoogleFonts.poppins(
-                        fontSize: 11,
-                        color: kTextWhite.withValues(alpha: 0.7))),
-                Text('₹ ${v2.toStringAsFixed(0)}',
-                    style: GoogleFonts.poppins(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: kTextWhite)),
-              ],
-            ),
+            pw.Text(title,
+                style: pw.TextStyle(
+                    fontSize: 18,
+                    fontWeight: pw.FontWeight.bold,
+                    color: PdfColors.white)),
+            pw.SizedBox(height: 4),
+            pw.Text(subtitle,
+                style: const pw.TextStyle(
+                    fontSize: 11, color: PdfColors.white)),
           ],
         ),
+        pw.Text('Generated:\n$date',
+            textAlign: pw.TextAlign.right,
+            style:
+                const pw.TextStyle(fontSize: 10, color: PdfColors.white)),
       ],
     ),
   );
+}
+
+pw.Widget pdfRow(String label, String value) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.symmetric(vertical: 5),
+    child: pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text(label,
+            style: const pw.TextStyle(
+                fontSize: 11, color: PdfColors.grey700)),
+        pw.Text(value,
+            style: pw.TextStyle(
+                fontSize: 11, fontWeight: pw.FontWeight.bold)),
+      ],
+    ),
+  );
+}
+
+pw.Widget pdfSectionTitle(String title) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.only(bottom: 8),
+    child: pw.Text(title,
+        style: pw.TextStyle(
+            fontSize: 14, fontWeight: pw.FontWeight.bold)),
+  );
+}
+
+pw.Widget pdfHeaderCell(String text) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.all(6),
+    child: pw.Text(text,
+        textAlign: pw.TextAlign.center,
+        style: pw.TextStyle(
+            fontSize: 9,
+            fontWeight: pw.FontWeight.bold,
+            color: PdfColors.white)),
+  );
+}
+
+pw.Widget pdfDataCell(String text) {
+  return pw.Padding(
+    padding: const pw.EdgeInsets.all(6),
+    child: pw.Text(text,
+        textAlign: pw.TextAlign.center,
+        style: const pw.TextStyle(fontSize: 8.5)),
+  );
+}
+
+pw.TableRow pdfTableHeaderRow(List<String> columns) {
+  return pw.TableRow(
+    decoration: pw.BoxDecoration(color: PdfColor.fromHex('#E63946')),
+    children: columns.map((c) => pdfHeaderCell(c)).toList(),
+  );
+}
+
+pw.Widget pdfSummaryBox(
+    {required String label,
+    required String value,
+    String? sub1,
+    String? v1,
+    String? sub2,
+    String? v2}) {
+  return pw.Container(
+    padding: const pw.EdgeInsets.all(16),
+    decoration: pw.BoxDecoration(
+      color: PdfColor.fromHex('#FFF0F0'),
+      borderRadius: pw.BorderRadius.circular(8),
+      border: pw.Border.all(
+          color: PdfColor.fromHex('#E63946'), width: 1.5),
+    ),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(label,
+            style: const pw.TextStyle(
+                fontSize: 11, color: PdfColors.grey700)),
+        pw.SizedBox(height: 4),
+        pw.Text(value,
+            style: pw.TextStyle(
+                fontSize: 22,
+                fontWeight: pw.FontWeight.bold,
+                color: PdfColor.fromHex('#E63946'))),
+        if (sub1 != null) ...[
+          pw.SizedBox(height: 10),
+          pw.Divider(color: PdfColors.grey400, height: 1),
+          pw.SizedBox(height: 6),
+          pw.Row(
+            mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+            children: [
+              pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Text(sub1,
+                      style: const pw.TextStyle(
+                          fontSize: 9, color: PdfColors.grey600)),
+                  pw.Text(v1 ?? '',
+                      style: pw.TextStyle(
+                          fontSize: 11,
+                          fontWeight: pw.FontWeight.bold)),
+                ],
+              ),
+              if (sub2 != null)
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.end,
+                  children: [
+                    pw.Text(sub2,
+                        style: const pw.TextStyle(
+                            fontSize: 9, color: PdfColors.grey600)),
+                    pw.Text(v2 ?? '',
+                        style: pw.TextStyle(
+                            fontSize: 11,
+                            fontWeight: pw.FontWeight.bold)),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ],
+    ),
+  );
+}
+
+String _pdfDate() {
+  final n = DateTime.now();
+  return '${n.day}/${n.month}/${n.year} ${n.hour}:${n.minute.toString().padLeft(2, '0')}';
 }
