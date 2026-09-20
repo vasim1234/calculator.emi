@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 import 'dart:math';
 
 // ═══════ COLORS (Black + Red Theme) ═══════
@@ -724,6 +727,215 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     _calc();
   }
 
+  // ✅ PDF Generate Function
+  Future<void> _generatePdf() async {
+    final pdf = pw.Document();
+    final now = DateTime.now();
+    final dateStr =
+        '${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) => [
+          // Header
+          pw.Container(
+            padding: const pw.EdgeInsets.all(16),
+            decoration: pw.BoxDecoration(
+              color: PdfColor.fromHex('#E63946'),
+              borderRadius: pw.BorderRadius.circular(8),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Text('EMI CALCULATION',
+                        style: pw.TextStyle(
+                            fontSize: 20,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColors.white)),
+                    pw.SizedBox(height: 4),
+                    pw.Text('Smart Calculator',
+                        style: const pw.TextStyle(
+                            fontSize: 12, color: PdfColors.white)),
+                  ],
+                ),
+                pw.Text('Generated:\n$dateStr',
+                    textAlign: pw.TextAlign.right,
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.white)),
+              ],
+            ),
+          ),
+
+          pw.SizedBox(height: 24),
+
+          // Input Details
+          pw.Text('Loan Details',
+              style: pw.TextStyle(
+                  fontSize: 16, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 12),
+          _pdfRow('Loan Amount', '₹ ${_p.text}'),
+          _pdfRow('Interest Rate', '${_r.text}% p.a.'),
+          _pdfRow('Tenure', '${_n.text} Months'),
+
+          pw.SizedBox(height: 24),
+
+          // Result Box
+          pw.Container(
+            padding: const pw.EdgeInsets.all(20),
+            decoration: pw.BoxDecoration(
+              color: PdfColor.fromHex('#FFF5F5'),
+              borderRadius: pw.BorderRadius.circular(8),
+              border: pw.Border.all(
+                  color: PdfColor.fromHex('#E63946'), width: 2),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Monthly EMI',
+                    style: const pw.TextStyle(
+                        fontSize: 12, color: PdfColors.grey700)),
+                pw.SizedBox(height: 4),
+                pw.Text('₹ ${_emi.toStringAsFixed(2)}',
+                    style: pw.TextStyle(
+                        fontSize: 28,
+                        fontWeight: pw.FontWeight.bold,
+                        color: PdfColor.fromHex('#E63946'))),
+                pw.SizedBox(height: 16),
+                pw.Divider(color: PdfColors.grey400),
+                pw.SizedBox(height: 8),
+                pw.Row(
+                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                  children: [
+                    _pdfSummary('Total Interest',
+                        '₹ ${_interest.toStringAsFixed(2)}'),
+                    _pdfSummary('Total Payment',
+                        '₹ ${_total.toStringAsFixed(2)}'),
+                  ],
+                ),
+              ],
+            ),
+          ),
+
+          pw.SizedBox(height: 24),
+
+          // Breakdown table
+          pw.Text('Payment Breakdown',
+              style: pw.TextStyle(
+                  fontSize: 16, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 12),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey300),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(2),
+            },
+            children: [
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#E63946')),
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text('Description',
+                        style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(8),
+                    child: pw.Text('Amount',
+                        style: pw.TextStyle(
+                            color: PdfColors.white,
+                            fontWeight: pw.FontWeight.bold)),
+                  ),
+                ],
+              ),
+              _pdfTableRow('Principal Amount', '₹ ${_p.text}'),
+              _pdfTableRow(
+                  'Total Interest', '₹ ${_interest.toStringAsFixed(2)}'),
+              _pdfTableRow('Total Payment',
+                  '₹ ${_total.toStringAsFixed(2)}'),
+              _pdfTableRow('Monthly EMI',
+                  '₹ ${_emi.toStringAsFixed(2)}'),
+            ],
+          ),
+
+          pw.SizedBox(height: 32),
+
+          // Footer
+          pw.Divider(),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'This is a computer-generated statement from Smart Calculator App.\nFor informational purposes only.',
+            style: const pw.TextStyle(
+                fontSize: 9, color: PdfColors.grey600),
+            textAlign: pw.TextAlign.center,
+          ),
+        ],
+      ),
+    );
+
+    // Save/Share options
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+      name: 'EMI_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+
+  pw.Widget _pdfRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.symmetric(vertical: 6),
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Text(label,
+              style: const pw.TextStyle(
+                  fontSize: 12, color: PdfColors.grey700)),
+          pw.Text(value,
+              style: pw.TextStyle(
+                  fontSize: 12, fontWeight: pw.FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _pdfSummary(String label, String value) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(label,
+            style:
+                const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+        pw.SizedBox(height: 2),
+        pw.Text(value,
+            style: pw.TextStyle(
+                fontSize: 14, fontWeight: pw.FontWeight.bold)),
+      ],
+    );
+  }
+
+  pw.TableRow _pdfTableRow(String desc, String amt) {
+    return pw.TableRow(
+      children: [
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(8),
+          child: pw.Text(desc, style: const pw.TextStyle(fontSize: 11)),
+        ),
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(8),
+          child: pw.Text(amt,
+              style: pw.TextStyle(
+                  fontSize: 11, fontWeight: pw.FontWeight.bold)),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -743,26 +955,138 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             _inputField('Interest Rate (% p.a.)', _r),
             _inputField('Tenure (Months)', _n),
             const SizedBox(height: 10),
-            _resultCard('Monthly EMI', '₹ ${_emi.toStringAsFixed(0)}',
-                sub1: 'Total Interest', v1: _interest,
-                sub2: 'Total Payment', v2: _total),
+
+            // ✅ RESULT CARD - CLICKABLE
+            GestureDetector(
+              onTap: _generatePdf,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFE63946), Color(0xFF8B0000)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFE63946).withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.picture_as_pdf,
+                            color: Colors.white, size: 16),
+                        const SizedBox(width: 6),
+                        Text('Tap to Download PDF',
+                            style: GoogleFonts.poppins(
+                                fontSize: 11,
+                                color: Colors.white.withValues(alpha: 0.9),
+                                fontWeight: FontWeight.w500)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text('Monthly EMI',
+                        style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9))),
+                    const SizedBox(height: 6),
+                    Text('₹ ${_emi.toStringAsFixed(0)}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                    const SizedBox(height: 12),
+                    Divider(color: Colors.white.withValues(alpha: 0.2)),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Total Interest',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: Colors.white
+                                        .withValues(alpha: 0.7))),
+                            Text('₹ ${_interest.toStringAsFixed(0)}',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('Total Payment',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color: Colors.white
+                                        .withValues(alpha: 0.7))),
+                            Text('₹ ${_total.toStringAsFixed(0)}',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
+
+            // Calculate button
             SizedBox(
               height: 55,
-              child: ElevatedButton(
+              child: ElevatedButton.icon(
                 onPressed: _calc,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: kRed,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  elevation: 8,
-                  shadowColor: kRed.withValues(alpha: 0.5),
-                ),
-                child: Text('Calculate EMI',
+                icon: const Icon(Icons.calculate, color: Colors.white),
+                label: Text('Calculate EMI',
                     style: GoogleFonts.poppins(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: kTextWhite)),
+                        color: Colors.white)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE63946),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                  elevation: 8,
+                  shadowColor:
+                      const Color(0xFFE63946).withValues(alpha: 0.5),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ✅ PDF Download Button (big, prominent)
+            SizedBox(
+              height: 55,
+              child: OutlinedButton.icon(
+                onPressed: _generatePdf,
+                icon: const Icon(Icons.picture_as_pdf,
+                    color: Color(0xFFE63946)),
+                label: Text('Download PDF Statement',
+                    style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFE63946))),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(
+                      color: Color(0xFFE63946), width: 2),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
               ),
             ),
           ],
