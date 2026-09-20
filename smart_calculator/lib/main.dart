@@ -704,20 +704,41 @@ class EmiCalculator extends StatefulWidget {
 class _EmiCalculatorState extends State<EmiCalculator> {
   final _p = TextEditingController(text: '500000');
   final _r = TextEditingController(text: '8.5');
-  final _n = TextEditingController(text: '60');
+  final _n = TextEditingController(text: '12');
   double _emi = 0, _interest = 0, _total = 0;
+  List<Map<String, dynamic>> _schedule = [];
 
   void _calc() {
     final p = double.tryParse(_p.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
-    final n = double.tryParse(_n.text) ?? 0;
+    final n = double.tryParse(_n.text)?.toInt() ?? 0;
     if (p <= 0 || r <= 0 || n <= 0) return;
-    final i = r / 12 / 100;
-    final emi = (p * i * pow(1 + i, n)) / (pow(1 + i, n) - 1);
+
+    final monthlyRate = r / 12 / 100;
+    final emi = (p * monthlyRate * pow(1 + monthlyRate, n)) /
+        (pow(1 + monthlyRate, n) - 1);
+
+    // ✅ Amortization Schedule
+    double balance = p;
+    List<Map<String, dynamic>> schedule = [];
+    for (int i = 1; i <= n; i++) {
+      final interestPaid = balance * monthlyRate;
+      final principalPaid = emi - interestPaid;
+      balance = balance - principalPaid;
+      schedule.add({
+        'month': i,
+        'emi': emi,
+        'interest': interestPaid,
+        'principal': principalPaid,
+        'balance': balance < 0 ? 0.0 : balance,
+      });
+    }
+
     setState(() {
       _emi = emi;
       _total = emi * n;
       _interest = _total - p;
+      _schedule = schedule;
     });
   }
 
@@ -727,23 +748,52 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     _calc();
   }
 
-  // ✅ PDF Generate Function
+  // ✅ PDF Generate with Full Amortization Schedule
   Future<void> _generatePdf() async {
     final pdf = pw.Document();
     final now = DateTime.now();
     final dateStr =
         '${now.day}/${now.month}/${now.year} ${now.hour}:${now.minute.toString().padLeft(2, '0')}';
 
+    // Colors
+    final redColor = PdfColor.fromHex('#E63946');
+    final lightRed = PdfColor.fromHex('#FFF0F0');
+
     pdf.addPage(
       pw.MultiPage(
         pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(32),
+        margin: const pw.EdgeInsets.all(24),
+        header: (context) {
+          if (context.pageNumber == 1) return pw.SizedBox();
+          return pw.Container(
+            padding: const pw.EdgeInsets.only(bottom: 8),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                pw.Text('EMI Statement - Smart Calculator',
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey700)),
+                pw.Text('Page ${context.pageNumber}/${context.pagesCount}',
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey700)),
+              ],
+            ),
+          );
+        },
+        footer: (context) => pw.Container(
+          padding: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'This is a computer-generated statement from Smart Calculator App.',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            textAlign: pw.TextAlign.center,
+          ),
+        ),
         build: (context) => [
-          // Header
+          // ═══ HEADER ═══
           pw.Container(
             padding: const pw.EdgeInsets.all(16),
             decoration: pw.BoxDecoration(
-              color: PdfColor.fromHex('#E63946'),
+              color: redColor,
               borderRadius: pw.BorderRadius.circular(8),
             ),
             child: pw.Row(
@@ -771,116 +821,139 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             ),
           ),
 
-          pw.SizedBox(height: 24),
+          pw.SizedBox(height: 20),
 
-          // Input Details
+          // ═══ LOAN DETAILS ═══
           pw.Text('Loan Details',
               style: pw.TextStyle(
-                  fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 12),
-          _pdfRow('Loan Amount', '₹ ${_p.text}'),
+                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 10),
+          _pdfRow('Loan Amount', 'Rs. ${_p.text}'),
           _pdfRow('Interest Rate', '${_r.text}% p.a.'),
           _pdfRow('Tenure', '${_n.text} Months'),
 
-          pw.SizedBox(height: 24),
+          pw.SizedBox(height: 20),
 
-          // Result Box
+          // ═══ SUMMARY BOX ═══
           pw.Container(
-            padding: const pw.EdgeInsets.all(20),
+            padding: const pw.EdgeInsets.all(16),
             decoration: pw.BoxDecoration(
-              color: PdfColor.fromHex('#FFF5F5'),
+              color: lightRed,
               borderRadius: pw.BorderRadius.circular(8),
-              border: pw.Border.all(
-                  color: PdfColor.fromHex('#E63946'), width: 2),
+              border: pw.Border.all(color: redColor, width: 1.5),
             ),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
                 pw.Text('Monthly EMI',
                     style: const pw.TextStyle(
-                        fontSize: 12, color: PdfColors.grey700)),
+                        fontSize: 11, color: PdfColors.grey700)),
                 pw.SizedBox(height: 4),
-                pw.Text('₹ ${_emi.toStringAsFixed(2)}',
+                pw.Text('Rs. ${_emi.toStringAsFixed(2)}',
                     style: pw.TextStyle(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: pw.FontWeight.bold,
-                        color: PdfColor.fromHex('#E63946'))),
-                pw.SizedBox(height: 16),
-                pw.Divider(color: PdfColors.grey400),
+                        color: redColor)),
+                pw.SizedBox(height: 12),
+                pw.Divider(color: PdfColors.grey400, height: 1),
                 pw.SizedBox(height: 8),
                 pw.Row(
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
+                    _pdfSummary('Principal',
+                        'Rs. ${_p.text}'),
                     _pdfSummary('Total Interest',
-                        '₹ ${_interest.toStringAsFixed(2)}'),
+                        'Rs. ${_interest.toStringAsFixed(2)}'),
                     _pdfSummary('Total Payment',
-                        '₹ ${_total.toStringAsFixed(2)}'),
+                        'Rs. ${_total.toStringAsFixed(2)}'),
                   ],
                 ),
               ],
             ),
           ),
 
-          pw.SizedBox(height: 24),
+          pw.SizedBox(height: 20),
 
-          // Breakdown table
-          pw.Text('Payment Breakdown',
+          // ═══ AMORTIZATION SCHEDULE ═══
+          pw.Text('Month-wise Payment Schedule',
               style: pw.TextStyle(
-                  fontSize: 16, fontWeight: pw.FontWeight.bold)),
-          pw.SizedBox(height: 12),
+                  fontSize: 14, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 4),
+          pw.Text('(Breakdown of each EMI payment)',
+              style: const pw.TextStyle(
+                  fontSize: 10, color: PdfColors.grey600)),
+          pw.SizedBox(height: 10),
+
           pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.grey300),
+            border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
             columnWidths: const {
-              0: pw.FlexColumnWidth(2),
-              1: pw.FlexColumnWidth(2),
+              0: pw.FlexColumnWidth(0.8),
+              1: pw.FlexColumnWidth(1.4),
+              2: pw.FlexColumnWidth(1.4),
+              3: pw.FlexColumnWidth(1.5),
+              4: pw.FlexColumnWidth(1.6),
             },
             children: [
+              // Header row
               pw.TableRow(
-                decoration: pw.BoxDecoration(
-                    color: PdfColor.fromHex('#E63946')),
+                decoration: pw.BoxDecoration(color: redColor),
                 children: [
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text('Description',
-                        style: pw.TextStyle(
-                            color: PdfColors.white,
-                            fontWeight: pw.FontWeight.bold)),
-                  ),
-                  pw.Padding(
-                    padding: const pw.EdgeInsets.all(8),
-                    child: pw.Text('Amount',
-                        style: pw.TextStyle(
-                            color: PdfColors.white,
-                            fontWeight: pw.FontWeight.bold)),
-                  ),
+                  _pdfHeaderCell('Month'),
+                  _pdfHeaderCell('EMI'),
+                  _pdfHeaderCell('Interest'),
+                  _pdfHeaderCell('Principal'),
+                  _pdfHeaderCell('Balance'),
                 ],
               ),
-              _pdfTableRow('Principal Amount', '₹ ${_p.text}'),
-              _pdfTableRow(
-                  'Total Interest', '₹ ${_interest.toStringAsFixed(2)}'),
-              _pdfTableRow('Total Payment',
-                  '₹ ${_total.toStringAsFixed(2)}'),
-              _pdfTableRow('Monthly EMI',
-                  '₹ ${_emi.toStringAsFixed(2)}'),
+              // Data rows
+              ..._schedule.asMap().entries.map((entry) {
+                final i = entry.key;
+                final row = entry.value;
+                // Alternate row color
+                final isEven = i % 2 == 0;
+                return pw.TableRow(
+                  decoration: pw.BoxDecoration(
+                    color: isEven ? PdfColors.white : PdfColor.fromHex('#F8F8F8'),
+                  ),
+                  children: [
+                    _pdfDataCell('${row['month']}'),
+                    _pdfDataCell('Rs. ${(row['emi'] as double).toStringAsFixed(2)}'),
+                    _pdfDataCell('Rs. ${(row['interest'] as double).toStringAsFixed(2)}'),
+                    _pdfDataCell('Rs. ${(row['principal'] as double).toStringAsFixed(2)}'),
+                    _pdfDataCell('Rs. ${(row['balance'] as double).toStringAsFixed(2)}'),
+                  ],
+                );
+              }),
             ],
           ),
 
-          pw.SizedBox(height: 32),
+          pw.SizedBox(height: 20),
 
-          // Footer
-          pw.Divider(),
-          pw.SizedBox(height: 8),
-          pw.Text(
-            'This is a computer-generated statement from Smart Calculator App.\nFor informational purposes only.',
-            style: const pw.TextStyle(
-                fontSize: 9, color: PdfColors.grey600),
-            textAlign: pw.TextAlign.center,
+          // ═══ TOTALS FOOTER ═══
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              color: PdfColor.fromHex('#F0F0F0'),
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text('Summary',
+                    style: pw.TextStyle(
+                        fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                pw.SizedBox(height: 6),
+                pw.Text(
+                    'Total Principal: Rs. ${_p.text}  |  Total Interest: Rs. ${_interest.toStringAsFixed(2)}  |  Total Payment: Rs. ${_total.toStringAsFixed(2)}',
+                    style: const pw.TextStyle(
+                        fontSize: 10, color: PdfColors.grey800)),
+              ],
+            ),
           ),
         ],
       ),
     );
 
-    // Save/Share options
     await Printing.layoutPdf(
       onLayout: (format) async => pdf.save(),
       name: 'EMI_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
@@ -889,16 +962,16 @@ class _EmiCalculatorState extends State<EmiCalculator> {
 
   pw.Widget _pdfRow(String label, String value) {
     return pw.Padding(
-      padding: const pw.EdgeInsets.symmetric(vertical: 6),
+      padding: const pw.EdgeInsets.symmetric(vertical: 5),
       child: pw.Row(
         mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
         children: [
           pw.Text(label,
               style: const pw.TextStyle(
-                  fontSize: 12, color: PdfColors.grey700)),
+                  fontSize: 11, color: PdfColors.grey700)),
           pw.Text(value,
               style: pw.TextStyle(
-                  fontSize: 12, fontWeight: pw.FontWeight.bold)),
+                  fontSize: 11, fontWeight: pw.FontWeight.bold)),
         ],
       ),
     );
@@ -910,29 +983,33 @@ class _EmiCalculatorState extends State<EmiCalculator> {
       children: [
         pw.Text(label,
             style:
-                const pw.TextStyle(fontSize: 10, color: PdfColors.grey600)),
+                const pw.TextStyle(fontSize: 9, color: PdfColors.grey600)),
         pw.SizedBox(height: 2),
         pw.Text(value,
             style: pw.TextStyle(
-                fontSize: 14, fontWeight: pw.FontWeight.bold)),
+                fontSize: 11, fontWeight: pw.FontWeight.bold)),
       ],
     );
   }
 
-  pw.TableRow _pdfTableRow(String desc, String amt) {
-    return pw.TableRow(
-      children: [
-        pw.Padding(
-          padding: const pw.EdgeInsets.all(8),
-          child: pw.Text(desc, style: const pw.TextStyle(fontSize: 11)),
-        ),
-        pw.Padding(
-          padding: const pw.EdgeInsets.all(8),
-          child: pw.Text(amt,
-              style: pw.TextStyle(
-                  fontSize: 11, fontWeight: pw.FontWeight.bold)),
-        ),
-      ],
+  pw.Widget _pdfHeaderCell(String text) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(6),
+      child: pw.Text(text,
+          textAlign: pw.TextAlign.center,
+          style: pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.white)),
+    );
+  }
+
+  pw.Widget _pdfDataCell(String text) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(6),
+      child: pw.Text(text,
+          textAlign: pw.TextAlign.center,
+          style: const pw.TextStyle(fontSize: 8.5)),
     );
   }
 
@@ -951,12 +1028,12 @@ class _EmiCalculatorState extends State<EmiCalculator> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _inputField('Loan Amount (₹)', _p),
+            _inputField('Loan Amount (Rs.)', _p),
             _inputField('Interest Rate (% p.a.)', _r),
             _inputField('Tenure (Months)', _n),
             const SizedBox(height: 10),
 
-            // ✅ RESULT CARD - CLICKABLE
+            // Result Card - Clickable
             GestureDetector(
               onTap: _generatePdf,
               child: Container(
@@ -997,7 +1074,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.9))),
                     const SizedBox(height: 6),
-                    Text('₹ ${_emi.toStringAsFixed(0)}',
+                    Text('Rs. ${_emi.toStringAsFixed(0)}',
                         style: GoogleFonts.poppins(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -1016,7 +1093,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                                     fontSize: 11,
                                     color: Colors.white
                                         .withValues(alpha: 0.7))),
-                            Text('₹ ${_interest.toStringAsFixed(0)}',
+                            Text('Rs. ${_interest.toStringAsFixed(0)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -1031,7 +1108,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                                     fontSize: 11,
                                     color: Colors.white
                                         .withValues(alpha: 0.7))),
-                            Text('₹ ${_total.toStringAsFixed(0)}',
+                            Text('Rs. ${_total.toStringAsFixed(0)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -1046,7 +1123,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             ),
             const SizedBox(height: 16),
 
-            // Calculate button
+            // Calculate Button
             SizedBox(
               height: 55,
               child: ElevatedButton.icon(
@@ -1062,14 +1139,12 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                   elevation: 8,
-                  shadowColor:
-                      const Color(0xFFE63946).withValues(alpha: 0.5),
                 ),
               ),
             ),
             const SizedBox(height: 12),
 
-            // ✅ PDF Download Button (big, prominent)
+            // PDF Download Button
             SizedBox(
               height: 55,
               child: OutlinedButton.icon(
@@ -1125,7 +1200,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     );
   }
 }
-
 // ═══════ SIP ═══════
 class SipCalculator extends StatefulWidget {
   const SipCalculator({super.key});
