@@ -21,18 +21,12 @@ jobs:
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.24.0'
           channel: 'stable'
 
       - name: Install dependencies
         run: |
           cd smart_calculator
           flutter pub get
-
-      - name: Downgrade Gradle
-        run: |
-          cd smart_calculator/android
-          sed -i 's|distributionUrl=.*|distributionUrl=https\\://services.gradle.org/distributions/gradle-7.6.3-all.zip|' gradle/wrapper/gradle-wrapper.properties
 
       - name: Build APK
         run: |
