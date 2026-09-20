@@ -4,6 +4,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'dart:math';
+import 'dart:typed_data';
 
 // ═══════ COLORS ═══════
 const kBg = Color(0xFF000000);
@@ -723,7 +724,17 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     _calc();
   }
 
+  // ═══════ PDF Generate (Print/Save) ═══════
   Future<void> _generatePdf() async {
+    final bytes = await _buildEmiPdfBytes();
+    await Printing.layoutPdf(
+      onLayout: (format) async => bytes,
+      name: 'EMI_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+
+  // ═══════ PDF Bytes Build (for WhatsApp Share) ═══════
+  Future<Uint8List> _buildEmiPdfBytes() async {
     final pdf = pw.Document();
     final dateStr = _pdfDate();
     final redColor = PdfColor.fromHex('#E63946');
@@ -743,7 +754,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                 pw.Text('EMI Statement - Smart Calculator',
                     style: const pw.TextStyle(
                         fontSize: 10, color: PdfColors.grey700)),
-                pw.Text('Page ${context.pageNumber}/${context.pagesCount}',
+                pw.Text(
+                    'Page ${context.pageNumber}/${context.pagesCount}',
                     style: const pw.TextStyle(
                         fontSize: 10, color: PdfColors.grey700)),
               ],
@@ -754,7 +766,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Text(
             'This is a computer-generated statement from Smart Calculator App.',
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            style:
+                const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
             textAlign: pw.TextAlign.center,
           ),
         ),
@@ -777,7 +790,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
           pw.SizedBox(height: 20),
           pdfSectionTitle('Month-wise Payment Schedule'),
           pw.Table(
-            border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+            border:
+                pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
             columnWidths: const {
               0: pw.FlexColumnWidth(0.8),
               1: pw.FlexColumnWidth(1.4),
@@ -794,14 +808,20 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                 final isEven = i % 2 == 0;
                 return pw.TableRow(
                   decoration: pw.BoxDecoration(
-                    color: isEven ? PdfColors.white : PdfColor.fromHex('#F8F8F8'),
+                    color: isEven
+                        ? PdfColors.white
+                        : PdfColor.fromHex('#F8F8F8'),
                   ),
                   children: [
                     pdfDataCell('${row['month']}'),
-                    pdfDataCell('Rs. ${(row['emi'] as double).toStringAsFixed(2)}'),
-                    pdfDataCell('Rs. ${(row['interest'] as double).toStringAsFixed(2)}'),
-                    pdfDataCell('Rs. ${(row['principal'] as double).toStringAsFixed(2)}'),
-                    pdfDataCell('Rs. ${(row['balance'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell(
+                        'Rs. ${(row['emi'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell(
+                        'Rs. ${(row['interest'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell(
+                        'Rs. ${(row['principal'] as double).toStringAsFixed(2)}'),
+                    pdfDataCell(
+                        'Rs. ${(row['balance'] as double).toStringAsFixed(2)}'),
                   ],
                 );
               }),
@@ -832,10 +852,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
       ),
     );
 
-    await Printing.layoutPdf(
-      onLayout: (format) async => pdf.save(),
-      name: 'EMI_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
-    );
+    return pdf.save();
   }
 
   @override
@@ -857,6 +874,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             _inputField('Interest Rate (% p.a.)', _r),
             _inputField('Tenure (Months)', _n),
             const SizedBox(height: 10),
+
+            // Result Card (tap to open PDF preview)
             GestureDetector(
               onTap: _generatePdf,
               child: Container(
@@ -887,14 +906,16 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                         Text('Tap to Download PDF',
                             style: GoogleFonts.poppins(
                                 fontSize: 11,
-                                color: Colors.white.withValues(alpha: 0.9))),
+                                color:
+                                    Colors.white.withValues(alpha: 0.9))),
                       ],
                     ),
                     const SizedBox(height: 12),
                     Text('Monthly EMI',
                         style: GoogleFonts.poppins(
                             fontSize: 13,
-                            color: Colors.white.withValues(alpha: 0.9))),
+                            color:
+                                Colors.white.withValues(alpha: 0.9))),
                     const SizedBox(height: 6),
                     Text('Rs. ${_emi.toStringAsFixed(0)}',
                         style: GoogleFonts.poppins(
@@ -913,8 +934,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                             Text('Total Interest',
                                 style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color:
-                                        Colors.white.withValues(alpha: 0.7))),
+                                    color: Colors.white
+                                        .withValues(alpha: 0.7))),
                             Text('Rs. ${_interest.toStringAsFixed(0)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
@@ -928,8 +949,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                             Text('Total Payment',
                                 style: GoogleFonts.poppins(
                                     fontSize: 11,
-                                    color:
-                                        Colors.white.withValues(alpha: 0.7))),
+                                    color: Colors.white
+                                        .withValues(alpha: 0.7))),
                             Text('Rs. ${_total.toStringAsFixed(0)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
@@ -944,6 +965,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               ),
             ),
             const SizedBox(height: 16),
+
+            // Calculate Button
             SizedBox(
               height: 55,
               child: ElevatedButton.icon(
@@ -962,6 +985,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               ),
             ),
             const SizedBox(height: 12),
+
+            // Download PDF Button
             SizedBox(
               height: 55,
               child: OutlinedButton.icon(
@@ -974,6 +999,35 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                         color: kRed)),
                 style: OutlinedButton.styleFrom(
                   side: const BorderSide(color: kRed, width: 2),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // ✅ WhatsApp Share Button
+            SizedBox(
+              height: 55,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final bytes = await _buildEmiPdfBytes();
+                  await Printing.sharePdf(
+                    bytes: bytes,
+                    filename:
+                        'EMI_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
+                  );
+                },
+                icon: const Icon(Icons.share,
+                    color: Color(0xFF25D366)),
+                label: Text('Share on WhatsApp',
+                    style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF25D366))),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(
+                      color: Color(0xFF25D366), width: 2),
                   shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16)),
                 ),
@@ -1005,8 +1059,8 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                 borderRadius: BorderRadius.circular(14),
                 borderSide: BorderSide.none,
               ),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 16),
             ),
             onChanged: (_) => _calc(),
           ),
@@ -1552,6 +1606,126 @@ class _GstCalculatorState extends State<GstCalculator> {
     _calc();
   }
 
+  Future<void> _generatePdf() async {
+    final pdf = pw.Document();
+    final dateStr = _pdfDate();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        footer: (context) => pw.Container(
+          padding: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'Computer-generated tax invoice from Smart Calculator App.',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            textAlign: pw.TextAlign.center,
+          ),
+        ),
+        build: (context) => [
+          pdfHeader('GST INVOICE', 'Smart Calculator - Tax Calculation',
+              dateStr),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Invoice Details'),
+          pdfRow('Mode', _mode == 'add' ? 'Add GST' : 'Remove GST'),
+          pdfRow('GST Rate', '$_rate%'),
+          pdfRow('Entered Amount', 'Rs. ${_a.text}'),
+          pw.SizedBox(height: 16),
+          pdfSummaryBox(
+            label: 'Total Amount',
+            value: 'Rs. ${_total.toStringAsFixed(2)}',
+            sub1: 'Base Amount',
+            v1: 'Rs. ${_base.toStringAsFixed(2)}',
+            sub2: 'GST ($_rate%)',
+            v2: 'Rs. ${_gst.toStringAsFixed(2)}',
+          ),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Tax Breakdown'),
+          pw.Table(
+            border:
+                pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(2),
+              1: pw.FlexColumnWidth(1.5),
+            },
+            children: [
+              pdfTableHeaderRow(['Description', 'Amount']),
+              pw.TableRow(
+                decoration:
+                    pw.BoxDecoration(color: PdfColor.fromHex('#F8F8F8')),
+                children: [
+                  pdfDataCell('Base Amount (Taxable Value)'),
+                  pdfDataCell('Rs. ${_base.toStringAsFixed(2)}'),
+                ],
+              ),
+              pw.TableRow(
+                children: [
+                  pdfDataCell('CGST (${_rate / 2}%)'),
+                  pdfDataCell('Rs. ${(_gst / 2).toStringAsFixed(2)}'),
+                ],
+              ),
+              pw.TableRow(
+                decoration:
+                    pw.BoxDecoration(color: PdfColor.fromHex('#F8F8F8')),
+                children: [
+                  pdfDataCell('SGST (${_rate / 2}%)'),
+                  pdfDataCell('Rs. ${(_gst / 2).toStringAsFixed(2)}'),
+                ],
+              ),
+              pw.TableRow(
+                children: [
+                  pdfDataCell('Total GST'),
+                  pdfDataCell('Rs. ${_gst.toStringAsFixed(2)}'),
+                ],
+              ),
+              pw.TableRow(
+                decoration: pw.BoxDecoration(
+                    color: PdfColor.fromHex('#FFE5E5')),
+                children: [
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text('Grand Total',
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold)),
+                  ),
+                  pw.Padding(
+                    padding: const pw.EdgeInsets.all(6),
+                    child: pw.Text('Rs. ${_total.toStringAsFixed(2)}',
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                            fontSize: 10,
+                            fontWeight: pw.FontWeight.bold,
+                            color: PdfColor.fromHex('#E63946'))),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+          pw.Container(
+            padding: const pw.EdgeInsets.all(10),
+            decoration: pw.BoxDecoration(
+              color: PdfColors.grey100,
+              borderRadius: pw.BorderRadius.circular(6),
+            ),
+            child: pw.Text(
+              'Note: CGST and SGST are equally divided from total GST. '
+              'For inter-state transactions, IGST may apply instead.',
+              style:
+                  const pw.TextStyle(fontSize: 9, color: PdfColors.grey700),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+      name: 'GST_Invoice_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1641,64 +1815,104 @@ class _GstCalculatorState extends State<GstCalculator> {
               }).toList(),
             ),
             const SizedBox(height: 24),
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [kRed, kRedDark]),
-                borderRadius: BorderRadius.circular(20),
+            GestureDetector(
+              onTap: _generatePdf,
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient:
+                      const LinearGradient(colors: [kRed, kRedDark]),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kRed.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.picture_as_pdf,
+                            color: Colors.white, size: 14),
+                        const SizedBox(width: 4),
+                        Text('Tap to Download PDF',
+                            style: GoogleFonts.poppins(
+                                fontSize: 10, color: Colors.white)),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text('Total Amount',
+                        style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9))),
+                    const SizedBox(height: 6),
+                    Text('Rs. ${_total.toStringAsFixed(2)}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 30,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white)),
+                    const SizedBox(height: 12),
+                    Divider(color: Colors.white.withValues(alpha: 0.2)),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text('Base Amount',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color:
+                                        Colors.white.withValues(alpha: 0.7))),
+                            Text('Rs. ${_base.toStringAsFixed(2)}',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text('GST ($_rate%)',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 11,
+                                    color:
+                                        Colors.white.withValues(alpha: 0.7))),
+                            Text('Rs. ${_gst.toStringAsFixed(2)}',
+                                style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
-                children: [
-                  Text('Total Amount',
-                      style: GoogleFonts.poppins(
-                          fontSize: 13,
-                          color: Colors.white.withValues(alpha: 0.9))),
-                  const SizedBox(height: 6),
-                  Text('Rs. ${_total.toStringAsFixed(2)}',
-                      style: GoogleFonts.poppins(
-                          fontSize: 30,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white)),
-                  const SizedBox(height: 12),
-                  Divider(color: Colors.white.withValues(alpha: 0.2)),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Base Amount',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  color:
-                                      Colors.white.withValues(alpha: 0.7))),
-                          Text('Rs. ${_base.toStringAsFixed(2)}',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.end,
-                        children: [
-                          Text('GST ($_rate%)',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 11,
-                                  color:
-                                      Colors.white.withValues(alpha: 0.7))),
-                          Text('Rs. ${_gst.toStringAsFixed(2)}',
-                              style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white)),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 50,
+              child: OutlinedButton.icon(
+                onPressed: _generatePdf,
+                icon: const Icon(Icons.picture_as_pdf, color: kRed),
+                label: Text('Download GST Invoice',
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: kRed)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: kRed, width: 2),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
               ),
             ),
           ],
@@ -1720,6 +1934,7 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   final _h = TextEditingController(text: '170');
   double _bmi = 0;
   String _cat = '';
+  Color _catColor = kRed;
 
   void _calc() {
     final w = double.tryParse(_w.text) ?? 0;
@@ -1729,12 +1944,16 @@ class _BmiCalculatorState extends State<BmiCalculator> {
       _bmi = w / (h * h);
       if (_bmi < 18.5) {
         _cat = 'Underweight';
+        _catColor = const Color(0xFF3B82F6);
       } else if (_bmi < 25) {
         _cat = 'Normal';
+        _catColor = const Color(0xFF00D09C);
       } else if (_bmi < 30) {
         _cat = 'Overweight';
+        _catColor = const Color(0xFFFFA500);
       } else {
         _cat = 'Obese';
+        _catColor = kRed;
       }
     });
   }
@@ -1743,6 +1962,123 @@ class _BmiCalculatorState extends State<BmiCalculator> {
   void initState() {
     super.initState();
     _calc();
+  }
+
+  Future<void> _generatePdf() async {
+    final pdf = pw.Document();
+    final dateStr = _pdfDate();
+    final w = double.tryParse(_w.text) ?? 0;
+    final h = double.tryParse(_h.text) ?? 0;
+    final idealMin = 18.5 * (h / 100) * (h / 100);
+    final idealMax = 24.9 * (h / 100) * (h / 100);
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(24),
+        footer: (context) => pw.Container(
+          padding: const pw.EdgeInsets.only(top: 8),
+          child: pw.Text(
+            'Computer-generated health report from Smart Calculator App.',
+            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            textAlign: pw.TextAlign.center,
+          ),
+        ),
+        build: (context) => [
+          pdfHeader('BMI HEALTH REPORT', 'Smart Calculator - Health Check',
+              dateStr),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Personal Details'),
+          pdfRow('Weight', '$w kg'),
+          pdfRow('Height', '$h cm'),
+          pw.SizedBox(height: 16),
+          pdfSummaryBox(
+            label: 'Your BMI Score',
+            value: _bmi.toStringAsFixed(1),
+            sub1: 'Category',
+            v1: _cat,
+            sub2: 'Ideal Range',
+            v2:
+                '${idealMin.toStringAsFixed(1)} - ${idealMax.toStringAsFixed(1)} kg',
+          ),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('BMI Categories'),
+          pw.Table(
+            border:
+                pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
+            columnWidths: const {
+              0: pw.FlexColumnWidth(1),
+              1: pw.FlexColumnWidth(1.5),
+            },
+            children: [
+              pdfTableHeaderRow(['BMI Range', 'Category']),
+              _bmiCatRow('< 18.5', 'Underweight (Blue)', _bmi < 18.5),
+              _bmiCatRow('18.5 - 24.9', 'Normal (Green)',
+                  _bmi >= 18.5 && _bmi < 25),
+              _bmiCatRow('25.0 - 29.9', 'Overweight (Orange)',
+                  _bmi >= 25 && _bmi < 30),
+              _bmiCatRow('>= 30.0', 'Obese (Red)', _bmi >= 30),
+            ],
+          ),
+          pw.SizedBox(height: 20),
+          pdfSectionTitle('Health Tips'),
+          pw.Bullet(
+              text:
+                  'Maintain a balanced diet with fruits, vegetables and whole grains.',
+              style: const pw.TextStyle(fontSize: 10)),
+          pw.Bullet(
+              text: 'Exercise for at least 30 minutes, 5 days a week.',
+              style: const pw.TextStyle(fontSize: 10)),
+          pw.Bullet(
+              text: 'Drink 8-10 glasses of water daily.',
+              style: const pw.TextStyle(fontSize: 10)),
+          pw.Bullet(
+              text: 'Get 7-8 hours of quality sleep every night.',
+              style: const pw.TextStyle(fontSize: 10)),
+          pw.Bullet(
+              text:
+                  'Consult a doctor or nutritionist for personalized advice.',
+              style: const pw.TextStyle(fontSize: 10)),
+        ],
+      ),
+    );
+
+    await Printing.layoutPdf(
+      onLayout: (format) async => pdf.save(),
+      name: 'BMI_Report_${DateTime.now().millisecondsSinceEpoch}.pdf',
+    );
+  }
+
+  pw.TableRow _bmiCatRow(String range, String label, bool isActive) {
+    return pw.TableRow(
+      decoration: pw.BoxDecoration(
+        color: isActive
+            ? PdfColor.fromHex('#FFE5E5')
+            : PdfColors.white,
+      ),
+      children: [
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(6),
+          child: pw.Text(range,
+              textAlign: pw.TextAlign.center,
+              style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight:
+                      isActive ? pw.FontWeight.bold : pw.FontWeight.normal)),
+        ),
+        pw.Padding(
+          padding: const pw.EdgeInsets.all(6),
+          child: pw.Text('${isActive ? "▶ " : ""}$label',
+              style: pw.TextStyle(
+                  fontSize: 9,
+                  fontWeight:
+                      isActive ? pw.FontWeight.bold : pw.FontWeight.normal,
+                  color: isActive
+                      ? PdfColor.fromHex('#E63946')
+                      : PdfColors.black)),
+        ),
+      ],
+    );
   }
 
   @override
@@ -1754,47 +2090,85 @@ class _BmiCalculatorState extends State<BmiCalculator> {
         {'label': 'Height (cm)', 'c': _h},
       ],
       onCalc: _calc,
-      resultWidget: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors: [kRed, kRedDark]),
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: kRed.withValues(alpha: 0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Text('Your BMI',
-                style: GoogleFonts.poppins(
-                    fontSize: 13,
-                    color: Colors.white.withValues(alpha: 0.9))),
-            const SizedBox(height: 6),
-            Text(_bmi.toStringAsFixed(1),
-                style: GoogleFonts.poppins(
-                    fontSize: 42,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white)),
-            const SizedBox(height: 8),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      resultWidget: Column(
+        children: [
+          GestureDetector(
+            onTap: _generatePdf,
+            child: Container(
+              padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.2),
+                gradient:
+                    const LinearGradient(colors: [kRed, kRedDark]),
                 borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: kRed.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
               ),
-              child: Text(_cat,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.picture_as_pdf,
+                          color: Colors.white, size: 14),
+                      const SizedBox(width: 4),
+                      Text('Tap to Download PDF',
+                          style: GoogleFonts.poppins(
+                              fontSize: 10, color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Your BMI',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: Colors.white.withValues(alpha: 0.9))),
+                  const SizedBox(height: 6),
+                  Text(_bmi.toStringAsFixed(1),
+                      style: GoogleFonts.poppins(
+                          fontSize: 42,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white)),
+                  const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(_cat,
+                        style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: _generatePdf,
+              icon: const Icon(Icons.picture_as_pdf, color: kRed),
+              label: Text('Download BMI Report',
                   style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: Colors.white)),
+                      color: kRed)),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: kRed, width: 2),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16)),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
