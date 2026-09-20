@@ -3,10 +3,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
-import 'dart:math';
-import 'dart:typed_data';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:math';
 import 'dart:convert';
+import 'dart:typed_data';
 
 // ═══════ COLORS ═══════
 const kBg = Color(0xFF000000);
@@ -963,7 +964,306 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     _fetchRate();
   }
 
-  // ═══════ CURRENCY PICKER ═══════
+ // ═══════ CURRENCY ═══════
+class CurrencyScreen extends StatefulWidget {
+  const CurrencyScreen({super.key});
+  @override
+  State<CurrencyScreen> createState() => _CurrencyScreenState();
+}
+
+class _CurrencyScreenState extends State<CurrencyScreen> {
+  final _amount = TextEditingController(text: '1');
+  String _from = 'USD';
+  String _to = 'INR';
+  double _rate = 0;
+  double _result = 0;
+  bool _loading = true;
+  String _error = '';
+  String _source = '';
+  DateTime? _lastUpdated;
+
+  final Map<String, Map<String, String>> _currencies = {
+    'USD': {'name': 'US Dollar', 'flag': '🇺🇸'},
+    'INR': {'name': 'Indian Rupee', 'flag': '🇮🇳'},
+    'EUR': {'name': 'Euro', 'flag': '🇪🇺'},
+    'GBP': {'name': 'British Pound', 'flag': '🇬🇧'},
+    'JPY': {'name': 'Japanese Yen', 'flag': '🇯🇵'},
+    'AUD': {'name': 'Australian Dollar', 'flag': '🇦🇺'},
+    'CAD': {'name': 'Canadian Dollar', 'flag': '🇨🇦'},
+    'CHF': {'name': 'Swiss Franc', 'flag': '🇨🇭'},
+    'CNY': {'name': 'Chinese Yuan', 'flag': '🇨🇳'},
+    'AED': {'name': 'UAE Dirham', 'flag': '🇦🇪'},
+    'SAR': {'name': 'Saudi Riyal', 'flag': '🇸🇦'},
+    'SGD': {'name': 'Singapore Dollar', 'flag': '🇸🇬'},
+    'HKD': {'name': 'Hong Kong Dollar', 'flag': '🇭🇰'},
+    'NZD': {'name': 'New Zealand Dollar', 'flag': '🇳🇿'},
+    'KRW': {'name': 'South Korean Won', 'flag': '🇰🇷'},
+    'THB': {'name': 'Thai Baht', 'flag': '🇹🇭'},
+    'MYR': {'name': 'Malaysian Ringgit', 'flag': '🇲🇾'},
+    'IDR': {'name': 'Indonesian Rupiah', 'flag': '🇮🇩'},
+    'PHP': {'name': 'Philippine Peso', 'flag': '🇵🇭'},
+    'PKR': {'name': 'Pakistani Rupee', 'flag': '🇵🇰'},
+    'BDT': {'name': 'Bangladeshi Taka', 'flag': '🇧🇩'},
+    'LKR': {'name': 'Sri Lankan Rupee', 'flag': '🇱🇰'},
+    'NPR': {'name': 'Nepalese Rupee', 'flag': '🇳🇵'},
+    'ZAR': {'name': 'South African Rand', 'flag': '🇿🇦'},
+    'BRL': {'name': 'Brazilian Real', 'flag': '🇧🇷'},
+    'MXN': {'name': 'Mexican Peso', 'flag': '🇲🇽'},
+    'RUB': {'name': 'Russian Ruble', 'flag': '🇷🇺'},
+    'TRY': {'name': 'Turkish Lira', 'flag': '🇹🇷'},
+    'SEK': {'name': 'Swedish Krona', 'flag': '🇸🇪'},
+    'NOK': {'name': 'Norwegian Krone', 'flag': '🇳🇴'},
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRate();
+  }
+
+  // ═══════════════════════════════════════════════════
+  // MAIN FETCH — 3-Layer with Caching
+  // ═══════════════════════════════════════════════════
+  Future<void> _fetchRate() async {
+    setState(() {
+      _loading = true;
+      _error = '';
+      _source = '';
+    });
+
+    // Same currency shortcut
+    if (_from == _to) {
+      setState(() {
+        _rate = 1;
+        _result = double.tryParse(_amount.text) ?? 0;
+        _loading = false;
+        _source = 'Same currency';
+        _lastUpdated = DateTime.now();
+      });
+      return;
+    }
+
+    // ═══ LAYER 1: Check Cache ═══
+    final cached = await _getCachedRate(_from, _to);
+    if (cached != null) {
+      setState(() {
+        _rate = cached['rate']!;
+        _result = (double.tryParse(_amount.text) ?? 0) * cached['rate']!;
+        _loading = false;
+        _source = 'Cached (${_formatDate(cached['date']!)})';
+        _lastUpdated = cached['date'];
+      });
+      return;
+    }
+
+    // ═══ LAYER 2: Frankfurter API ═══
+    final apiRate = await _fetchFrankfurter();
+    if (apiRate > 0) {
+      final now = DateTime.now();
+      await _saveCachedRate(_from, _to, apiRate, now);
+      setState(() {
+        _rate = apiRate;
+        _result = (double.tryParse(_amount.text) ?? 0) * apiRate;
+        _loading = false;
+        _source = 'Live (ECB)';
+        _lastUpdated = now;
+      });
+      return;
+    }
+
+    // ═══ LAYER 3: Local Fallback ═══
+    final fallbackRate = _getFallbackRate(_from, _to);
+    if (fallbackRate > 0) {
+      setState(() {
+        _rate = fallbackRate;
+        _result = (double.tryParse(_amount.text) ?? 0) * fallbackRate;
+        _loading = false;
+        _source = 'Offline (Approx.)';
+        _error = 'Internet issue — approximate rate shown';
+      });
+    } else {
+      setState(() {
+        _loading = false;
+        _error = 'Unable to fetch rate. Check internet.';
+      });
+    }
+  }
+
+  // ═══════════════════════════════════════════════════
+  // CACHE HELPERS
+  // ═══════════════════════════════════════════════════
+  String _cacheKey(String from, String to) {
+    final today = DateTime.now();
+    return 'rate_${from}_${to}_${today.year}_${today.month}_${today.day}';
+  }
+
+  Future<Map<String, dynamic>?> _getCachedRate(
+      String from, String to) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // Aaj ka rate check karo
+      final todayKey = _cacheKey(from, to);
+      final todayRate = prefs.getDouble(todayKey);
+      final todayTimestamp = prefs.getInt('${todayKey}_ts');
+
+      if (todayRate != null && todayTimestamp != null) {
+        return {
+          'rate': todayRate,
+          'date': DateTime.fromMillisecondsSinceEpoch(todayTimestamp),
+        };
+      }
+
+      // Aaj ka nahi hai — kal ka use karo (agar 2 din se purana nahi hai)
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final yesterdayKey =
+          'rate_${from}_${to}_${yesterday.year}_${yesterday.month}_${yesterday.day}';
+      final yesterdayRate = prefs.getDouble(yesterdayKey);
+      final yesterdayTimestamp = prefs.getInt('${yesterdayKey}_ts');
+
+      if (yesterdayRate != null && yesterdayTimestamp != null) {
+        return {
+          'rate': yesterdayRate,
+          'date': DateTime.fromMillisecondsSinceEpoch(yesterdayTimestamp),
+        };
+      }
+
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  Future<void> _saveCachedRate(
+      String from, String to, double rate, DateTime timestamp) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = _cacheKey(from, to);
+      await prefs.setDouble(key, rate);
+      await prefs.setInt('${key}_ts', timestamp.millisecondsSinceEpoch);
+
+      // Purane cache clear karo (7 din se purane)
+      final keys = prefs.getKeys();
+      for (final k in keys) {
+        if (k.startsWith('rate_')) {
+          final tsKey = '${k}_ts';
+          final ts = prefs.getInt(tsKey);
+          if (ts != null) {
+            final age = DateTime.now()
+                .difference(DateTime.fromMillisecondsSinceEpoch(ts));
+            if (age.inDays > 7) {
+              await prefs.remove(k);
+              await prefs.remove(tsKey);
+            }
+          }
+        }
+      }
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  Future<void> _clearTodayCache() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = _cacheKey(_from, _to);
+      await prefs.remove(key);
+      await prefs.remove('${key}_ts');
+    } catch (e) {
+      // Silent fail
+    }
+  }
+
+  String _formatDate(DateTime d) {
+    return '${d.hour}:${d.minute.toString().padLeft(2, '0')}';
+  }
+
+  // ═══════════════════════════════════════════════════
+  // LAYER 2: Frankfurter API
+  // ═══════════════════════════════════════════════════
+  Future<double> _fetchFrankfurter() async {
+    try {
+      final url = Uri.parse(
+          'https://api.frankfurter.dev/v2/rate/$_from/$_to');
+      final response =
+          await http.get(url).timeout(const Duration(seconds: 8));
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final rate = (data['rate'] as num?)?.toDouble() ?? 0;
+        if (rate > 0) return rate;
+      }
+    } catch (e) {
+      // Silent fail
+    }
+    return 0;
+  }
+
+  // ═══════════════════════════════════════════════════
+  // LAYER 3: Local Fallback (Updated 2026 rates)
+  // ═══════════════════════════════════════════════════
+  double _getFallbackRate(String from, String to) {
+    final usdRates = {
+      'USD': 1.0,
+      'INR': 95.0,
+      'EUR': 0.92,
+      'GBP': 0.79,
+      'JPY': 149.5,
+      'AUD': 1.52,
+      'CAD': 1.36,
+      'CHF': 0.88,
+      'CNY': 7.24,
+      'AED': 3.67,
+      'SAR': 3.75,
+      'SGD': 1.34,
+      'HKD': 7.82,
+      'NZD': 1.64,
+      'KRW': 1330.0,
+      'THB': 36.5,
+      'MYR': 4.47,
+      'IDR': 15800.0,
+      'PHP': 56.5,
+      'PKR': 278.0,
+      'BDT': 110.0,
+      'LKR': 305.0,
+      'NPR': 152.0,
+      'ZAR': 18.5,
+      'BRL': 5.05,
+      'MXN': 17.2,
+      'RUB': 92.5,
+      'TRY': 34.2,
+      'SEK': 10.5,
+      'NOK': 10.8,
+    };
+    final fromUsd = usdRates[from];
+    final toUsd = usdRates[to];
+    if (fromUsd == null || toUsd == null) return 0;
+    return toUsd / fromUsd;
+  }
+
+  // ═══════════════════════════════════════════════════
+  // ACTIONS
+  // ═══════════════════════════════════════════════════
+  void _calculate() {
+    final amt = double.tryParse(_amount.text) ?? 0;
+    setState(() {
+      _result = amt * _rate;
+    });
+  }
+
+  void _swap() {
+    setState(() {
+      final temp = _from;
+      _from = _to;
+      _to = temp;
+    });
+    _fetchRate();
+  }
+
+  Future<void> _forceRefresh() async {
+    await _clearTodayCache();
+    await _fetchRate();
+  }
+
   Future<void> _pickCurrency(bool isFrom) async {
     final selected = await showModalBottomSheet<String>(
       context: context,
@@ -1036,6 +1336,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     }
   }
 
+  // ═══════════════════════════════════════════════════
+  // BUILD
+  // ═══════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1047,9 +1350,9 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         iconTheme: const IconThemeData(color: kTextWhite),
         actions: [
           IconButton(
-            onPressed: _fetchRate,
+            onPressed: _forceRefresh,
             icon: const Icon(Icons.refresh, color: kRed),
-            tooltip: 'Refresh Rates',
+            tooltip: 'Force Refresh (clears cache)',
           ),
         ],
       ),
@@ -1058,7 +1361,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ═══ FROM CURRENCY ═══
             Text('From',
                 style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
             const SizedBox(height: 6),
@@ -1097,14 +1399,14 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Amount input
             TextField(
               controller: _amount,
               keyboardType:
                   const TextInputType.numberWithOptions(decimal: true),
               style: GoogleFonts.poppins(
-                  color: kTextWhite, fontSize: 22, fontWeight: FontWeight.bold),
+                  color: kTextWhite,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold),
               decoration: InputDecoration(
                 filled: true,
                 fillColor: kCard,
@@ -1119,8 +1421,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               onChanged: (_) => _calculate(),
             ),
             const SizedBox(height: 16),
-
-            // ═══ SWAP BUTTON ═══
             Center(
               child: GestureDetector(
                 onTap: _swap,
@@ -1143,8 +1443,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // ═══ TO CURRENCY ═══
             Text('To',
                 style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
             const SizedBox(height: 6),
@@ -1183,8 +1481,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
             ),
             const SizedBox(height: 24),
-
-            // ═══ RESULT CARD ═══
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
@@ -1234,19 +1530,50 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                           fontWeight: FontWeight.w500,
                           color: Colors.white.withValues(alpha: 0.9)),
                     ),
-                    const SizedBox(height: 6),
-                    if (_lastUpdated != null)
+                    if (_source.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              _source.contains('Cache')
+                                  ? Icons.cached
+                                  : _source.contains('Live')
+                                      ? Icons.cloud_done
+                                      : Icons.offline_bolt,
+                              color: Colors.white,
+                              size: 12,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(_source,
+                                style: GoogleFonts.poppins(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                    ],
+                    if (_lastUpdated != null) ...[
+                      const SizedBox(height: 6),
                       Text(
-                        'Updated: ${_lastUpdated!.hour}:${_lastUpdated!.minute.toString().padLeft(2, '0')} ${_lastUpdated!.day}/${_lastUpdated!.month}/${_lastUpdated!.year}',
+                        'Updated: ${_lastUpdated!.hour}:${_lastUpdated!.minute.toString().padLeft(2, '0')} • ${_lastUpdated!.day}/${_lastUpdated!.month}/${_lastUpdated!.year}',
                         style: GoogleFonts.poppins(
                             fontSize: 10,
                             color: Colors.white.withValues(alpha: 0.7)),
                       ),
+                    ],
                   ],
                 ],
               ),
             ),
-
             if (_error.isNotEmpty) ...[
               const SizedBox(height: 12),
               Container(
@@ -1269,16 +1596,25 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                 ),
               ),
             ],
-
             const SizedBox(height: 20),
-
-            // Popular conversions
-            Text('Popular Conversions',
-                style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: kTextWhite)),
-            const SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Popular Conversions',
+                    style: GoogleFonts.poppins(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: kTextWhite)),
+                TextButton.icon(
+                  onPressed: _forceRefresh,
+                  icon: const Icon(Icons.refresh, color: kRed, size: 16),
+                  label: Text('Refresh',
+                      style: GoogleFonts.poppins(
+                          fontSize: 12, color: kRed)),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             Wrap(
               spacing: 8,
               runSpacing: 8,
