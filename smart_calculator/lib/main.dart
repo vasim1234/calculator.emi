@@ -133,7 +133,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
   static const Color softRed = Color(0xFFE63946);
   static const Color darkGrey = Color(0xFF2A2A2A);
 
-  // ═══════ MAIN KEY HANDLER ═══════
   void _onKey(String v) {
     setState(() {
       if (v == 'C') {
@@ -149,7 +148,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
       } else if (v == '=') {
         _handleEquals();
       } else {
-        // Digit ya operator add karo
         if (_display == '0' && '0123456789.'.contains(v)) {
           _display = v;
         } else {
@@ -160,33 +158,25 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     });
   }
 
-  // ═══════ LIVE PREVIEW UPDATE ═══════
   void _updatePreview() {
-    // Sirf complete expressions ka preview dikhao
-    // Jaise "1+1" → "= 2"
-    // Lekin "1+" ya "1+1+" → preview nahi (last operator ignore)
     final cleaned = _cleanExpression(_display);
     if (cleaned.isEmpty) {
       _preview = '';
       return;
     }
 
-    // Agar expression mein koi operator hai toh hi preview dikhao
     if (!cleaned.contains(RegExp(r'[+\-×÷%]'))) {
       _preview = '';
       return;
     }
 
-    // Agar last character operator hai toh preview mat dikhao
     if (_display.isNotEmpty &&
         '+-×÷%'.contains(_display[_display.length - 1])) {
-      // Lekin agar usse pehle bhi operator hai, tab error
       if (_display.length > 1 &&
           '+-×÷%'.contains(_display[_display.length - 2])) {
         _preview = '';
         return;
       }
-      // Last operator hata ke preview try karo
       final temp = _display.substring(0, _display.length - 1);
       try {
         final result = _eval(temp);
@@ -205,9 +195,7 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     }
   }
 
-  // ═══════ EQUALS HANDLER ═══════
   void _handleEquals() {
-    // Extra operators ignore karo (last mein)
     String expr = _display;
     while (expr.isNotEmpty && '+-×÷'.contains(expr[expr.length - 1])) {
       expr = expr.substring(0, expr.length - 1);
@@ -229,50 +217,35 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     }
   }
 
-  // ═══════ EXPRESSION CLEANER ═══════
-  // Yeh percentage ko handle karta hai + extra operators hatata hai
   String _cleanExpression(String expr) {
     if (expr.isEmpty) return expr;
-
-    // Multiple operators ko merge karo (jaise ++ ko + karo)
     String cleaned = expr;
-    // Remove trailing operators (extra + - × ÷)
     while (cleaned.isNotEmpty && '+-×÷'.contains(cleaned[cleaned.length - 1])) {
       cleaned = cleaned.substring(0, cleaned.length - 1);
     }
     return cleaned;
   }
 
-  // ═══════ RESULT FORMATTER ═══════
   String _formatResult(double r) {
     if (r.isNaN || r.isInfinite) return 'Error';
     if (r.truncateToDouble() == r) {
       return r.toInt().toString();
     }
-    return r.toStringAsFixed(4).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+    return r
+        .toStringAsFixed(4)
+        .replaceAll(RegExp(r'0+$'), '')
+        .replaceAll(RegExp(r'\.$'), '');
   }
 
-  // ═══════ EVALUATOR (with Percentage support) ═══════
   double _eval(String s) {
-    // Percentage logic pehle handle karo
     s = _handlePercentage(s);
     s = s.replaceAll('×', '*').replaceAll('÷', '/');
     if (s.isEmpty) throw Exception('Empty');
     return _parse(s);
   }
 
-  // ═══════ PERCENTAGE HANDLER ═══════
-  // 50-10% → 50-5 → 45
-  // 10-10% → 10-1 → 9
-  // 100+10% → 100+10 → 110
-  // 10% → 0.1
   String _handlePercentage(String expr) {
     if (!expr.contains('%')) return expr;
-
-    // Case 1: "A op B%" → replace B% with (A * B / 100)
-    // Jaise "50-10%" → "50-(50*10/100)" = "50-5"
-    // Jaise "100+10%" → "100+(100*10/100)" = "100+10"
-    // Jaise "200×10%" → "200×(200*10/100)" = "200×20"
 
     final percentPattern =
         RegExp(r'(\d+\.?\d*)\s*([+\-×÷])\s*(\d+\.?\d*)%');
@@ -282,17 +255,14 @@ class _BasicCalculatorState extends State<BasicCalculator> {
         final base = m.group(1)!;
         final op = m.group(2)!;
         final pct = m.group(3)!;
-        // For + and -: percentage of base
         if (op == '+' || op == '-') {
           return '$base$op($base*$pct/100)';
         } else {
-          // For × and ÷: simple percentage value
           return '$base$op($pct/100)';
         }
       });
     }
 
-    // Case 2: Standalone "10%" → "0.1"
     final soloPercent = RegExp(r'(\d+\.?\d*)%');
     expr = expr.replaceAllMapped(soloPercent, (m) {
       return '(${m.group(1)}/100)';
@@ -301,9 +271,7 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return expr;
   }
 
-  // ═══════ PARSER ═══════
   double _parse(String s) {
-    // Handle brackets first
     while (s.contains('(')) {
       final start = s.lastIndexOf('(');
       final end = s.indexOf(')', start);
@@ -332,7 +300,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return double.parse(s);
   }
 
-  // ═══════ BUTTON WIDGET ═══════
   Widget _btn(String label, {Color? bg, Color? fg}) {
     return Expanded(
       child: Padding(
@@ -367,7 +334,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return SafeArea(
       child: Column(
         children: [
-          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Row(
@@ -383,17 +349,13 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                   decoration: BoxDecoration(
                     color: darkGrey,
                     borderRadius: BorderRadius.circular(14),
-                    border:
-                        Border.all(color: softRed.withValues(alpha: 0.4)),
+                    border: Border.all(color: softRed.withValues(alpha: 0.4)),
                   ),
-                  child:
-                      const Icon(Icons.history, color: softRed, size: 20),
+                  child: const Icon(Icons.history, color: softRed, size: 20),
                 ),
               ],
             ),
           ),
-
-          // ═══════ DISPLAY (with Live Preview) ═══════
           Expanded(
             flex: 2,
             child: Container(
@@ -403,7 +365,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  // Live Preview Line (chhota, grey)
                   if (_preview.isNotEmpty)
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
@@ -416,7 +377,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                         ),
                       ),
                     ),
-                  // Main Expression Line
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     reverse: true,
@@ -433,8 +393,6 @@ class _BasicCalculatorState extends State<BasicCalculator> {
               ),
             ),
           ),
-
-          // ═══════ KEYPAD ═══════
           Expanded(
             flex: 5,
             child: Padding(
@@ -514,9 +472,9 @@ class FinanceScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       {'t': 'EMI Calculator', 's': 'Loan EMI', 'i': Icons.home_work, 'c': kRed, 'screen': const EmiCalculator()},
-      {'t': 'SIP Calculator', 's': 'Mutual Fund', 'i': Icons.trending_up, 'c': Color(0xFF00D09C), 'screen': const SipCalculator()},
-      {'t': 'FD Calculator', 's': 'Fixed Deposit', 'i': Icons.savings, 'c': Color(0xFFFFA500), 'screen': const FdCalculator()},
-      {'t': 'GST Calculator', 's': 'Tax Calculator', 'i': Icons.receipt_long, 'c': Color(0xFF8B5CF6), 'screen': const GstCalculator()},
+      {'t': 'SIP Calculator', 's': 'Mutual Fund', 'i': Icons.trending_up, 'c': const Color(0xFF00D09C), 'screen': const SipCalculator()},
+      {'t': 'FD Calculator', 's': 'Fixed Deposit', 'i': Icons.savings, 'c': const Color(0xFFFFA500), 'screen': const FdCalculator()},
+      {'t': 'GST Calculator', 's': 'Tax Calculator', 'i': Icons.receipt_long, 'c': const Color(0xFF8B5CF6), 'screen': const GstCalculator()},
     ];
 
     return SafeArea(
@@ -682,11 +640,11 @@ class ToolsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       {'t': 'BMI', 'i': Icons.favorite, 'c': kRed, 's': const BmiCalculator()},
-      {'t': 'Age', 'i': Icons.cake, 'c': Color(0xFFFF6B9D), 's': const AgeCalculator()},
-      {'t': 'Date', 'i': Icons.calendar_month, 'c': Color(0xFF3B82F6), 's': const DateCalculator()},
-      {'t': 'Unit', 'i': Icons.swap_horiz, 'c': Color(0xFF00D09C), 's': const UnitConverter()},
-      {'t': 'Tax', 'i': Icons.receipt, 'c': Color(0xFF8B5CF6), 's': const GstCalculator()},
-      {'t': 'Currency', 'i': Icons.currency_exchange, 'c': Color(0xFFFFA500), 's': const CurrencyScreen()},
+      {'t': 'Age', 'i': Icons.cake, 'c': const Color(0xFFFF6B9D), 's': const AgeCalculator()},
+      {'t': 'Date', 'i': Icons.calendar_month, 'c': const Color(0xFF3B82F6), 's': const DateCalculator()},
+      {'t': 'Unit', 'i': Icons.swap_horiz, 'c': const Color(0xFF00D09C), 's': const UnitConverter()},
+      {'t': 'Tax', 'i': Icons.receipt, 'c': const Color(0xFF8B5CF6), 's': const GstCalculator()},
+      {'t': 'Currency', 'i': Icons.currency_exchange, 'c': const Color(0xFFFFA500), 's': const CurrencyScreen()},
     ];
 
     return SafeArea(
@@ -823,162 +781,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   double _result = 0;
   bool _loading = true;
   String _error = '';
-  DateTime? _lastUpdated;
-
-  // Currency list with names and flags
-  final Map<String, Map<String, String>> _currencies = {
-    'USD': {'name': 'US Dollar', 'flag': '🇺🇸'},
-    'INR': {'name': 'Indian Rupee', 'flag': '🇮🇳'},
-    'EUR': {'name': 'Euro', 'flag': '🇪🇺'},
-    'GBP': {'name': 'British Pound', 'flag': '🇬🇧'},
-    'JPY': {'name': 'Japanese Yen', 'flag': '🇯🇵'},
-    'AUD': {'name': 'Australian Dollar', 'flag': '🇦🇺'},
-    'CAD': {'name': 'Canadian Dollar', 'flag': '🇨🇦'},
-    'CHF': {'name': 'Swiss Franc', 'flag': '🇨🇭'},
-    'CNY': {'name': 'Chinese Yuan', 'flag': '🇨🇳'},
-    'AED': {'name': 'UAE Dirham', 'flag': '🇦🇪'},
-    'SAR': {'name': 'Saudi Riyal', 'flag': '🇸🇦'},
-    'SGD': {'name': 'Singapore Dollar', 'flag': '🇸🇬'},
-    'HKD': {'name': 'Hong Kong Dollar', 'flag': '🇭🇰'},
-    'NZD': {'name': 'New Zealand Dollar', 'flag': '🇳🇿'},
-    'KRW': {'name': 'South Korean Won', 'flag': '🇰🇷'},
-    'THB': {'name': 'Thai Baht', 'flag': '🇹🇭'},
-    'MYR': {'name': 'Malaysian Ringgit', 'flag': '🇲🇾'},
-    'IDR': {'name': 'Indonesian Rupiah', 'flag': '🇮🇩'},
-    'PHP': {'name': 'Philippine Peso', 'flag': '🇵🇭'},
-    'PKR': {'name': 'Pakistani Rupee', 'flag': '🇵🇰'},
-    'BDT': {'name': 'Bangladeshi Taka', 'flag': '🇧🇩'},
-    'LKR': {'name': 'Sri Lankan Rupee', 'flag': '🇱🇰'},
-    'NPR': {'name': 'Nepalese Rupee', 'flag': '🇳🇵'},
-    'ZAR': {'name': 'South African Rand', 'flag': '🇿🇦'},
-    'BRL': {'name': 'Brazilian Real', 'flag': '🇧🇷'},
-    'MXN': {'name': 'Mexican Peso', 'flag': '🇲🇽'},
-    'RUB': {'name': 'Russian Ruble', 'flag': '🇷🇺'},
-    'TRY': {'name': 'Turkish Lira', 'flag': '🇹🇷'},
-    'SEK': {'name': 'Swedish Krona', 'flag': '🇸🇪'},
-    'NOK': {'name': 'Norwegian Krone', 'flag': '🇳🇴'},
-  };
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchRate();
-  }
-
-  // ═══════ FETCH LIVE RATE FROM FRANKFURTER API ═══════
-  Future<void> _fetchRate() async {
-    setState(() {
-      _loading = true;
-      _error = '';
-    });
-
-    try {
-      // Frankfurter API - ECB official data
-      final url = _from == _to
-          ? null
-          : Uri.parse('https://api.frankfurter.dev/v2/rate/$_from/$_to');
-
-      if (url == null) {
-        // Same currency
-        setState(() {
-          _rate = 1;
-          _result = double.tryParse(_amount.text) ?? 0;
-          _loading = false;
-          _lastUpdated = DateTime.now();
-        });
-        return;
-      }
-
-      final response = await http.get(url).timeout(
-            const Duration(seconds: 10),
-          );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        final rate = (data['rate'] as num).toDouble();
-        setState(() {
-          _rate = rate;
-          _result = (double.tryParse(_amount.text) ?? 0) * rate;
-          _loading = false;
-          _lastUpdated = DateTime.now();
-        });
-      } else {
-        throw Exception('API Error: ${response.statusCode}');
-      }
-    } catch (e) {
-      // Fallback: approximate rates (offline)
-      final fallbackRates = _getFallbackRate(_from, _to);
-      if (fallbackRates > 0) {
-        setState(() {
-          _rate = fallbackRates;
-          _result = (double.tryParse(_amount.text) ?? 0) * fallbackRates;
-          _loading = false;
-          _error = 'Offline: approximate rate';
-        });
-      } else {
-        setState(() {
-          _loading = false;
-          _error = 'Failed to fetch rate. Check internet.';
-        });
-      }
-    }
-  }
-
-  // Fallback rates (agar internet na ho)
-  double _getFallbackRate(String from, String to) {
-    final usdRates = {
-      'USD': 1.0,
-      'INR': 83.5,
-      'EUR': 0.92,
-      'GBP': 0.79,
-      'JPY': 149.5,
-      'AUD': 1.52,
-      'CAD': 1.36,
-      'CHF': 0.88,
-      'CNY': 7.24,
-      'AED': 3.67,
-      'SAR': 3.75,
-      'SGD': 1.34,
-    };
-    final fromUsd = usdRates[from];
-    final toUsd = usdRates[to];
-    if (fromUsd == null || toUsd == null) return 0;
-    return toUsd / fromUsd;
-  }
-
-  // ═══════ CALCULATE ON TYPE (LIVE PREVIEW) ═══════
-  void _calculate() {
-    final amt = double.tryParse(_amount.text) ?? 0;
-    setState(() {
-      _result = amt * _rate;
-    });
-  }
-
-  // ═══════ SWAP CURRENCIES ═══════
-  void _swap() {
-    setState(() {
-      final temp = _from;
-      _from = _to;
-      _to = temp;
-    });
-    _fetchRate();
-  }
-
- // ═══════ CURRENCY ═══════
-class CurrencyScreen extends StatefulWidget {
-  const CurrencyScreen({super.key});
-  @override
-  State<CurrencyScreen> createState() => _CurrencyScreenState();
-}
-
-class _CurrencyScreenState extends State<CurrencyScreen> {
-  final _amount = TextEditingController(text: '1');
-  String _from = 'USD';
-  String _to = 'INR';
-  double _rate = 0;
-  double _result = 0;
-  bool _loading = true;
-  String _error = '';
   String _source = '';
   DateTime? _lastUpdated;
 
@@ -1021,9 +823,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     _fetchRate();
   }
 
-  // ═══════════════════════════════════════════════════
-  // MAIN FETCH — 3-Layer with Caching
-  // ═══════════════════════════════════════════════════
   Future<void> _fetchRate() async {
     setState(() {
       _loading = true;
@@ -1031,7 +830,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       _source = '';
     });
 
-    // Same currency shortcut
     if (_from == _to) {
       setState(() {
         _rate = 1;
@@ -1043,7 +841,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       return;
     }
 
-    // ═══ LAYER 1: Check Cache ═══
+    // LAYER 1: Cache
     final cached = await _getCachedRate(_from, _to);
     if (cached != null) {
       setState(() {
@@ -1056,7 +854,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       return;
     }
 
-    // ═══ LAYER 2: Frankfurter API ═══
+    // LAYER 2: Frankfurter API
     final apiRate = await _fetchFrankfurter();
     if (apiRate > 0) {
       final now = DateTime.now();
@@ -1071,7 +869,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       return;
     }
 
-    // ═══ LAYER 3: Local Fallback ═══
+    // LAYER 3: Local fallback
     final fallbackRate = _getFallbackRate(_from, _to);
     if (fallbackRate > 0) {
       setState(() {
@@ -1089,9 +887,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════
-  // CACHE HELPERS
-  // ═══════════════════════════════════════════════════
   String _cacheKey(String from, String to) {
     final today = DateTime.now();
     return 'rate_${from}_${to}_${today.year}_${today.month}_${today.day}';
@@ -1101,8 +896,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       String from, String to) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
-      // Aaj ka rate check karo
       final todayKey = _cacheKey(from, to);
       final todayRate = prefs.getDouble(todayKey);
       final todayTimestamp = prefs.getInt('${todayKey}_ts');
@@ -1114,7 +907,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         };
       }
 
-      // Aaj ka nahi hai — kal ka use karo (agar 2 din se purana nahi hai)
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
       final yesterdayKey =
           'rate_${from}_${to}_${yesterday.year}_${yesterday.month}_${yesterday.day}';
@@ -1142,7 +934,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       await prefs.setDouble(key, rate);
       await prefs.setInt('${key}_ts', timestamp.millisecondsSinceEpoch);
 
-      // Purane cache clear karo (7 din se purane)
       final keys = prefs.getKeys();
       for (final k in keys) {
         if (k.startsWith('rate_')) {
@@ -1159,7 +950,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         }
       }
     } catch (e) {
-      // Silent fail
+      // silent
     }
   }
 
@@ -1170,7 +961,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       await prefs.remove(key);
       await prefs.remove('${key}_ts');
     } catch (e) {
-      // Silent fail
+      // silent
     }
   }
 
@@ -1178,9 +969,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return '${d.hour}:${d.minute.toString().padLeft(2, '0')}';
   }
 
-  // ═══════════════════════════════════════════════════
-  // LAYER 2: Frankfurter API
-  // ═══════════════════════════════════════════════════
   Future<double> _fetchFrankfurter() async {
     try {
       final url = Uri.parse(
@@ -1193,14 +981,11 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         if (rate > 0) return rate;
       }
     } catch (e) {
-      // Silent fail
+      // silent
     }
     return 0;
   }
 
-  // ═══════════════════════════════════════════════════
-  // LAYER 3: Local Fallback (Updated 2026 rates)
-  // ═══════════════════════════════════════════════════
   double _getFallbackRate(String from, String to) {
     final usdRates = {
       'USD': 1.0,
@@ -1240,9 +1025,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     return toUsd / fromUsd;
   }
 
-  // ═══════════════════════════════════════════════════
-  // ACTIONS
-  // ═══════════════════════════════════════════════════
   void _calculate() {
     final amt = double.tryParse(_amount.text) ?? 0;
     setState(() {
@@ -1336,9 +1118,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
     }
   }
 
-  // ═══════════════════════════════════════════════════
-  // BUILD
-  // ═══════════════════════════════════════════════════
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1712,7 +1491,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     _calc();
   }
 
-  // ═══════ PDF Generate (Print/Save) ═══════
   Future<void> _generatePdf() async {
     final bytes = await _buildEmiPdfBytes();
     await Printing.layoutPdf(
@@ -1721,12 +1499,9 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     );
   }
 
-  // ═══════ PDF Bytes Build (for WhatsApp Share) ═══════
   Future<Uint8List> _buildEmiPdfBytes() async {
     final pdf = pw.Document();
     final dateStr = _pdfDate();
-    final redColor = PdfColor.fromHex('#E63946');
-    final lightRed = PdfColor.fromHex('#FFF0F0');
 
     pdf.addPage(
       pw.MultiPage(
@@ -1862,8 +1637,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             _inputField('Interest Rate (% p.a.)', _r),
             _inputField('Tenure (Months)', _n),
             const SizedBox(height: 10),
-
-            // Result Card (tap to open PDF preview)
             GestureDetector(
               onTap: _generatePdf,
               child: Container(
@@ -1953,8 +1726,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               ),
             ),
             const SizedBox(height: 16),
-
-            // Calculate Button
             SizedBox(
               height: 55,
               child: ElevatedButton.icon(
@@ -1973,8 +1744,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // Download PDF Button
             SizedBox(
               height: 55,
               child: OutlinedButton.icon(
@@ -1993,8 +1762,6 @@ class _EmiCalculatorState extends State<EmiCalculator> {
               ),
             ),
             const SizedBox(height: 12),
-
-            // ✅ WhatsApp Share Button
             SizedBox(
               height: 55,
               child: OutlinedButton.icon(
@@ -2006,8 +1773,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                         'EMI_Statement_${DateTime.now().millisecondsSinceEpoch}.pdf',
                   );
                 },
-                icon: const Icon(Icons.share,
-                    color: Color(0xFF25D366)),
+                icon: const Icon(Icons.share, color: Color(0xFF25D366)),
                 label: Text('Share on WhatsApp',
                     style: GoogleFonts.poppins(
                         fontSize: 15,
@@ -2212,8 +1978,8 @@ class _SipCalculatorState extends State<SipCalculator> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [kRed, kRedDark]),
+                gradient:
+                    const LinearGradient(colors: [kRed, kRedDark]),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -2459,8 +2225,8 @@ class _FdCalculatorState extends State<FdCalculator> {
             child: Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                    colors: [kRed, kRedDark]),
+                gradient:
+                    const LinearGradient(colors: [kRed, kRedDark]),
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
@@ -2606,7 +2372,8 @@ class _GstCalculatorState extends State<GstCalculator> {
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Text(
             'Computer-generated tax invoice from Smart Calculator App.',
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            style:
+                const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
             textAlign: pw.TextAlign.center,
           ),
         ),
@@ -2968,7 +2735,8 @@ class _BmiCalculatorState extends State<BmiCalculator> {
           padding: const pw.EdgeInsets.only(top: 8),
           child: pw.Text(
             'Computer-generated health report from Smart Calculator App.',
-            style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+            style:
+                const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
             textAlign: pw.TextAlign.center,
           ),
         ),
