@@ -1,5 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:math';
+
+// ═══════ COLORS ═══════
+const kBg = Color(0xFF1A1A2E);
+const kCard = Color(0xFF252540);
+const kCard2 = Color(0xFF2F2F4F);
+const kPurple = Color(0xFF6C63FF);
+const kPurpleLight = Color(0xFF8B80FF);
+const kOrange = Color(0xFFFF6B35);
+const kBlue = Color(0xFF4A90E2);
+const kGreen = Color(0xFF2ECC71);
+const kRed = Color(0xFFE74C3C);
+const kYellow = Color(0xFFF39C12);
+const kTextWhite = Color(0xFFFFFFFF);
+const kTextGrey = Color(0xFF9B9BB4);
 
 void main() {
   runApp(const SmartCalculatorApp());
@@ -11,15 +26,16 @@ class SmartCalculatorApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Smart Calculator',
+      title: 'Finance Calculator',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.indigo,
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F7),
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: kBg,
+        primaryColor: kPurple,
+        textTheme: GoogleFonts.poppinsTextTheme(Theme.of(context).textTheme),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF4F46E5),
-          foregroundColor: Colors.white,
+          backgroundColor: kBg,
+          foregroundColor: kTextWhite,
           elevation: 0,
         ),
       ),
@@ -46,16 +62,54 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: kBg,
       body: _screens[_i],
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _i,
-        onDestinationSelected: (v) => setState(() => _i = v),
-        destinations: const [
-          NavigationDestination(icon: Icon(Icons.calculate), label: 'Calc'),
-          NavigationDestination(icon: Icon(Icons.currency_rupee), label: 'Finance'),
-          NavigationDestination(icon: Icon(Icons.build), label: 'Tools'),
-          NavigationDestination(icon: Icon(Icons.currency_exchange), label: 'Currency'),
-        ],
+      bottomNavigationBar: Container(
+        margin: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: kPurple.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 5),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: NavigationBar(
+            backgroundColor: kCard,
+            indicatorColor: kPurple.withValues(alpha: 0.3),
+            selectedIndex: _i,
+            height: 65,
+            labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+            onDestinationSelected: (v) => setState(() => _i = v),
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.calculate_outlined, color: kTextGrey),
+                selectedIcon: Icon(Icons.calculate, color: kPurpleLight),
+                label: 'Calc',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.bar_chart_outlined, color: kTextGrey),
+                selectedIcon: Icon(Icons.bar_chart, color: kPurpleLight),
+                label: 'Finance',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.grid_view_outlined, color: kTextGrey),
+                selectedIcon: Icon(Icons.grid_view, color: kPurpleLight),
+                label: 'Tools',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.currency_exchange_outlined, color: kTextGrey),
+                selectedIcon: Icon(Icons.currency_exchange, color: kPurpleLight),
+                label: 'Currency',
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -76,11 +130,14 @@ class _BasicCalculatorState extends State<BasicCalculator> {
       if (v == 'C') {
         _display = '0';
       } else if (v == '⌫') {
-        _display = _display.length > 1 ? _display.substring(0, _display.length - 1) : '0';
+        _display = _display.length > 1
+            ? _display.substring(0, _display.length - 1)
+            : '0';
       } else if (v == '=') {
         try {
           final result = _eval(_display);
-          _display = result.toStringAsFixed(result.truncateToDouble() == result ? 0 : 4);
+          _display = result.toStringAsFixed(
+              result.truncateToDouble() == result ? 0 : 4);
         } catch (e) {
           _display = 'Error';
         }
@@ -121,18 +178,26 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return Expanded(
       flex: flex,
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(5),
         child: AspectRatio(
           aspectRatio: 1.15,
-          child: ElevatedButton(
-            onPressed: () => _onKey(label),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: bg ?? Colors.white,
-              foregroundColor: fg ?? Colors.black87,
-              elevation: 1,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          child: Material(
+            color: bg ?? kCard,
+            borderRadius: BorderRadius.circular(18),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => _onKey(label),
+              child: Center(
+                child: Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: fg ?? kTextWhite,
+                  ),
+                ),
+              ),
             ),
-            child: Text(label, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600)),
           ),
         ),
       ),
@@ -141,10 +206,30 @@ class _BasicCalculatorState extends State<BasicCalculator> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('🧮 Calculator')),
-      body: Column(
+    return SafeArea(
+      child: Column(
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
+            child: Row(
+              children: [
+                Text('Calculator',
+                    style: GoogleFonts.poppins(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: kTextWhite)),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: kCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.history, color: kPurpleLight, size: 20),
+                ),
+              ],
+            ),
+          ),
           Expanded(
             flex: 2,
             child: Container(
@@ -153,40 +238,54 @@ class _BasicCalculatorState extends State<BasicCalculator> {
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 reverse: true,
-                child: Text(_display,
-                    style: const TextStyle(fontSize: 44, fontWeight: FontWeight.bold)),
+                child: Text(
+                  _display,
+                  style: GoogleFonts.poppins(
+                    fontSize: 50,
+                    fontWeight: FontWeight.bold,
+                    color: kTextWhite,
+                  ),
+                ),
               ),
             ),
           ),
           Expanded(
             flex: 5,
             child: Padding(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(10),
               child: Column(
                 children: [
                   Row(children: [
-                    _btn('C', bg: Colors.red.shade100),
-                    _btn('⌫', bg: Colors.orange.shade100),
-                    _btn('%', bg: Colors.orange.shade100),
-                    _btn('÷', bg: Colors.indigo.shade100),
+                    _btn('C', bg: kRed.withValues(alpha: 0.2), fg: kRed),
+                    _btn('⌫', bg: kOrange.withValues(alpha: 0.2), fg: kOrange),
+                    _btn('%', bg: kOrange.withValues(alpha: 0.2), fg: kOrange),
+                    _btn('÷', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
                   ]),
                   Row(children: [
-                    _btn('7'), _btn('8'), _btn('9'),
-                    _btn('×', bg: Colors.indigo.shade100),
+                    _btn('7'),
+                    _btn('8'),
+                    _btn('9'),
+                    _btn('×', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
                   ]),
                   Row(children: [
-                    _btn('4'), _btn('5'), _btn('6'),
-                    _btn('-', bg: Colors.indigo.shade100),
+                    _btn('4'),
+                    _btn('5'),
+                    _btn('6'),
+                    _btn('-', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
                   ]),
                   Row(children: [
-                    _btn('1'), _btn('2'), _btn('3'),
-                    _btn('+', bg: Colors.indigo.shade100),
+                    _btn('1'),
+                    _btn('2'),
+                    _btn('3'),
+                    _btn('+', bg: kPurple.withValues(alpha: 0.3), fg: kPurpleLight),
                   ]),
-                  // ✅ FIXED: single '=' button with double width
                   Row(children: [
                     _btn('0'),
                     _btn('.'),
-                    _btn('=', bg: Colors.green.shade400, fg: Colors.white, flex: 2),
+                    _btn('=',
+                        bg: kPurple,
+                        fg: kTextWhite,
+                        flex: 2),
                   ]),
                 ],
               ),
@@ -201,38 +300,191 @@ class _BasicCalculatorState extends State<BasicCalculator> {
 // ═══════ FINANCE ═══════
 class FinanceScreen extends StatelessWidget {
   const FinanceScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final items = [
-      {'t': 'EMI Calculator', 'i': Icons.home_work, 'c': Colors.indigo, 's': const EmiCalculator()},
-      {'t': 'SIP Calculator', 'i': Icons.trending_up, 'c': Colors.green, 's': const SipCalculator()},
-      {'t': 'FD Calculator', 'i': Icons.savings, 'c': Colors.orange, 's': const FdCalculator()},
-      {'t': 'GST Calculator', 'i': Icons.receipt_long, 'c': Colors.purple, 's': const GstCalculator()},
+      {
+        't': 'EMI Calculator',
+        's': 'Loan EMI',
+        'i': Icons.home_work,
+        'c': kPurple,
+        'screen': const EmiCalculator()
+      },
+      {
+        't': 'SIP Calculator',
+        's': 'Mutual Fund',
+        'i': Icons.trending_up,
+        'c': kGreen,
+        'screen': const SipCalculator()
+      },
+      {
+        't': 'FD Calculator',
+        's': 'Fixed Deposit',
+        'i': Icons.savings,
+        'c': kOrange,
+        'screen': const FdCalculator()
+      },
+      {
+        't': 'GST Calculator',
+        's': 'Tax Calculator',
+        'i': Icons.receipt_long,
+        'c': kRed,
+        'screen': const GstCalculator()
+      },
     ];
-    return Scaffold(
-      appBar: AppBar(title: const Text('💰 Finance')),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, i) {
-          final it = items[i];
-          return Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(14),
-              leading: CircleAvatar(
-                backgroundColor: (it['c'] as Color).withValues(alpha: 0.15),
-                child: Icon(it['i'] as IconData, color: it['c'] as Color),
-              ),
-              title: Text(it['t'] as String,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => it['s'] as Widget)),
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Text('Finance',
+                    style: GoogleFonts.poppins(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: kTextWhite)),
+                const Spacer(),
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: kCard,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(Icons.notifications_none,
+                      color: kTextWhite, size: 22),
+                ),
+              ],
             ),
-          );
-        },
+            const SizedBox(height: 6),
+            Text('Everything you need to plan finances',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 20),
+
+            // Portfolio Card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [kPurple, Color(0xFF4A3AFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: kPurple.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Your Portfolio',
+                      style: GoogleFonts.poppins(
+                          fontSize: 14, color: kTextWhite.withValues(alpha: 0.9))),
+                  const SizedBox(height: 6),
+                  Text('₹ 12,45,600',
+                      style: GoogleFonts.poppins(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: kTextWhite)),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.arrow_upward,
+                          color: kGreen, size: 16),
+                      const SizedBox(width: 4),
+                      Text('+12.5% this month',
+                          style: GoogleFonts.poppins(
+                              fontSize: 12, color: kGreen)),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            Text('Calculators',
+                style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: kTextWhite)),
+            const SizedBox(height: 12),
+
+            ...items.map((it) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _modernCard(
+                    title: it['t'] as String,
+                    subtitle: it['s'] as String,
+                    icon: it['i'] as IconData,
+                    color: it['c'] as Color,
+                    onTap: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => it['screen'] as Widget),
+                    ),
+                  ),
+                )),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _modernCard({
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: kCard,
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: color, size: 24),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title,
+                        style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: kTextWhite)),
+                    const SizedBox(height: 2),
+                    Text(subtitle,
+                        style: GoogleFonts.poppins(
+                            fontSize: 12, color: kTextGrey)),
+                  ],
+                ),
+              ),
+              const Icon(Icons.arrow_forward_ios,
+                  color: kTextGrey, size: 16),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -241,57 +493,176 @@ class FinanceScreen extends StatelessWidget {
 // ═══════ TOOLS ═══════
 class ToolsScreen extends StatelessWidget {
   const ToolsScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final items = [
-      {'t': 'BMI Calculator', 'i': Icons.favorite, 'c': Colors.red, 's': const BmiCalculator()},
-      {'t': 'Age Calculator', 'i': Icons.cake, 'c': Colors.pink, 's': const AgeCalculator()},
-      {'t': 'Date Calculator', 'i': Icons.calendar_month, 'c': Colors.blue, 's': const DateCalculator()},
-      {'t': 'Unit Converter', 'i': Icons.swap_horiz, 'c': Colors.teal, 's': const UnitConverter()},
+      {'t': 'BMI', 'i': Icons.favorite, 'c': kRed, 's': const BmiCalculator()},
+      {'t': 'Age', 'i': Icons.cake, 'c': kOrange, 's': const AgeCalculator()},
+      {'t': 'Date', 'i': Icons.calendar_month, 'c': kBlue, 's': const DateCalculator()},
+      {'t': 'Unit', 'i': Icons.swap_horiz, 'c': kGreen, 's': const UnitConverter()},
+      {'t': 'Tax', 'i': Icons.receipt, 'c': kPurple, 's': const GstCalculator()},
+      {'t': 'Currency', 'i': Icons.currency_exchange, 'c': kYellow, 's': const CurrencyScreen()},
     ];
-    return Scaffold(
-      appBar: AppBar(title: const Text('🔧 Tools')),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
-        itemBuilder: (context, i) {
-          final it = items[i];
-          return Card(
-            elevation: 2,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            child: ListTile(
-              contentPadding: const EdgeInsets.all(14),
-              leading: CircleAvatar(
-                backgroundColor: (it['c'] as Color).withValues(alpha: 0.15),
-                child: Icon(it['i'] as IconData, color: it['c'] as Color),
+
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Tools',
+                style: GoogleFonts.poppins(
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                    color: kTextWhite)),
+            const SizedBox(height: 6),
+            Text('Finance & Tools',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 20),
+
+            GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: items.length,
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+                childAspectRatio: 0.95,
               ),
-              title: Text(it['t'] as String,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-              trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => it['s'] as Widget)),
+              itemBuilder: (context, i) {
+                final it = items[i];
+                return _gridCard(
+                  label: it['t'] as String,
+                  icon: it['i'] as IconData,
+                  color: it['c'] as Color,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => it['s'] as Widget),
+                  ),
+                );
+              },
             ),
-          );
-        },
+            const SizedBox(height: 24),
+
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(18),
+                border: Border.all(color: kYellow.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: kYellow.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.lightbulb, color: kYellow, size: 22),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Quick Tip',
+                            style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: kTextWhite)),
+                        const SizedBox(height: 4),
+                        Text('Use SIP to build wealth over time with compounding.',
+                            style: GoogleFonts.poppins(
+                                fontSize: 12, color: kTextGrey)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _gridCard({
+    required String label,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: kCard,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: onTap,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 26),
+            ),
+            const SizedBox(height: 10),
+            Text(label,
+                style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: kTextWhite)),
+          ],
+        ),
       ),
     );
   }
 }
 
-// ═══════ CURRENCY (placeholder) ═══════
+// ═══════ CURRENCY ═══════
 class CurrencyScreen extends StatelessWidget {
   const CurrencyScreen({super.key});
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('💱 Currency')),
-      body: const Center(
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kBg,
+        title: Text('Currency',
+            style: GoogleFonts.poppins(color: kTextWhite)),
+        iconTheme: const IconThemeData(color: kTextWhite),
+      ),
+      body: Center(
         child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Text(
-            'Live Currency Converter\n\n(API integration next update mein)',
-            textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 16),
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: kCard,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.currency_exchange,
+                    color: kPurpleLight, size: 50),
+              ),
+              const SizedBox(height: 20),
+              Text('Currency Converter',
+                  style: GoogleFonts.poppins(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: kTextWhite)),
+              const SizedBox(height: 8),
+              Text('Live rates coming soon...',
+                  style: GoogleFonts.poppins(fontSize: 14, color: kTextGrey)),
+            ],
           ),
         ),
       ),
@@ -307,36 +678,175 @@ class EmiCalculator extends StatefulWidget {
 }
 
 class _EmiCalculatorState extends State<EmiCalculator> {
-  final _p = TextEditingController();
-  final _r = TextEditingController();
-  final _n = TextEditingController();
+  final _p = TextEditingController(text: '500000');
+  final _r = TextEditingController(text: '8.5');
+  final _n = TextEditingController(text: '60');
   String _res = '';
+  double _emi = 0;
+  double _interest = 0;
+  double _total = 0;
 
   void _calc() {
     final p = double.tryParse(_p.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
     final n = double.tryParse(_n.text) ?? 0;
     if (p <= 0 || r <= 0 || n <= 0) {
-      setState(() => _res = '⚠️ Sabhi fields sahi bharo');
+      setState(() => _res = '⚠️ Fill all fields');
       return;
     }
     final i = r / 12 / 100;
     final emi = (p * i * pow(1 + i, n)) / (pow(1 + i, n) - 1);
     final total = emi * n;
     setState(() {
-      _res = 'Monthly EMI: ₹${emi.toStringAsFixed(2)}\n'
-          'Total Interest: ₹${(total - p).toStringAsFixed(2)}\n'
-          'Total Payment: ₹${total.toStringAsFixed(2)}';
+      _emi = emi;
+      _interest = total - p;
+      _total = total;
+      _res = 'done';
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    _calc();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _calcScreen('EMI Calculator', [
-      _field('Loan Amount (₹)', _p, '500000'),
-      _field('Interest Rate (% p.a.)', _r, '8.5'),
-      _field('Tenure (Months)', _n, '60'),
-    ], _calc, _res);
+    return Scaffold(
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kBg,
+        title: Text('EMI Calculator',
+            style: GoogleFonts.poppins(color: kTextWhite)),
+        iconTheme: const IconThemeData(color: kTextWhite),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _inputField('Loan Amount (₹)', _p),
+            _inputField('Interest Rate (% p.a.)', _r),
+            _inputField('Tenure (Months)', _n),
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [kPurple, Color(0xFF4A3AFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: kPurple.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Text('Monthly EMI',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          color: kTextWhite.withValues(alpha: 0.9))),
+                  const SizedBox(height: 6),
+                  Text('₹ ${_emi.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: kTextWhite)),
+                  const SizedBox(height: 12),
+                  Divider(color: kTextWhite.withValues(alpha: 0.2)),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Total Interest',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11, color: kTextWhite.withValues(alpha: 0.7))),
+                          Text('₹ ${_interest.toStringAsFixed(0)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: kTextWhite)),
+                        ],
+                      ),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          Text('Total Payment',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 11, color: kTextWhite.withValues(alpha: 0.7))),
+                          Text('₹ ${_total.toStringAsFixed(0)}',
+                              style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w600,
+                                  color: kTextWhite)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 55,
+              child: ElevatedButton(
+                onPressed: _calc,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: kPurple,
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16)),
+                ),
+                child: Text('Calculate EMI',
+                    style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: kTextWhite)),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _inputField(String label, TextEditingController c) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(label,
+              style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+          const SizedBox(height: 6),
+          TextField(
+            controller: c,
+            keyboardType: TextInputType.number,
+            style: GoogleFonts.poppins(color: kTextWhite, fontSize: 15),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: kCard,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: BorderSide.none,
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16, vertical: 16),
+            ),
+            onChanged: (_) => _calc(),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -348,37 +858,43 @@ class SipCalculator extends StatefulWidget {
 }
 
 class _SipCalculatorState extends State<SipCalculator> {
-  final _m = TextEditingController();
-  final _r = TextEditingController();
-  final _y = TextEditingController();
-  String _res = '';
+  final _m = TextEditingController(text: '5000');
+  final _r = TextEditingController(text: '12');
+  final _y = TextEditingController(text: '10');
+  double _mat = 0, _inv = 0;
 
   void _calc() {
     final m = double.tryParse(_m.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
     final y = double.tryParse(_y.text) ?? 0;
-    if (m <= 0 || r <= 0 || y <= 0) {
-      setState(() => _res = '⚠️ Sabhi fields sahi bharo');
-      return;
-    }
+    if (m <= 0 || r <= 0 || y <= 0) return;
     final i = r / 12 / 100;
     final n = y * 12;
-    final mat = m * ((pow(1 + i, n) - 1) / i) * (1 + i);
-    final inv = m * n;
     setState(() {
-      _res = 'Invested: ₹${inv.toStringAsFixed(0)}\n'
-          'Returns: ₹${(mat - inv).toStringAsFixed(0)}\n'
-          'Maturity: ₹${mat.toStringAsFixed(0)}';
+      _mat = m * ((pow(1 + i, n) - 1) / i) * (1 + i);
+      _inv = m * n;
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    _calc();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _calcScreen('SIP Calculator', [
-      _field('Monthly Investment (₹)', _m, '5000'),
-      _field('Expected Return (% p.a.)', _r, '12'),
-      _field('Time Period (Years)', _y, '10'),
-    ], _calc, _res);
+    return _simpleCalc(
+      title: 'SIP Calculator',
+      fields: [
+        {'label': 'Monthly (₹)', 'c': _m},
+        {'label': 'Return (% p.a.)', 'c': _r},
+        {'label': 'Years', 'c': _y},
+      ],
+      onCalc: _calc,
+      resultWidget: _resultCard('Maturity', _mat,
+          sub1: 'Invested', v1: _inv, sub2: 'Returns', v2: _mat - _inv),
+    );
   }
 }
 
@@ -390,34 +906,42 @@ class FdCalculator extends StatefulWidget {
 }
 
 class _FdCalculatorState extends State<FdCalculator> {
-  final _p = TextEditingController();
-  final _r = TextEditingController();
-  final _t = TextEditingController();
-  String _res = '';
+  final _p = TextEditingController(text: '100000');
+  final _r = TextEditingController(text: '7.5');
+  final _t = TextEditingController(text: '5');
+  double _mat = 0, _inv = 0;
 
   void _calc() {
     final p = double.tryParse(_p.text) ?? 0;
     final r = double.tryParse(_r.text) ?? 0;
     final t = double.tryParse(_t.text) ?? 0;
-    if (p <= 0 || r <= 0 || t <= 0) {
-      setState(() => _res = '⚠️ Sabhi fields sahi bharo');
-      return;
-    }
+    if (p <= 0 || r <= 0 || t <= 0) return;
     const n = 4;
-    final mat = p * pow(1 + (r / 100) / n, n * t);
     setState(() {
-      _res = 'Maturity: ₹${mat.toStringAsFixed(0)}\n'
-          'Interest: ₹${(mat - p).toStringAsFixed(0)}';
+      _mat = p * pow(1 + (r / 100) / n, n * t);
+      _inv = p;
     });
   }
 
   @override
+  void initState() {
+    super.initState();
+    _calc();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return _calcScreen('FD Calculator', [
-      _field('Principal (₹)', _p, '100000'),
-      _field('Interest Rate (% p.a.)', _r, '7.5'),
-      _field('Tenure (Years)', _t, '5'),
-    ], _calc, _res);
+    return _simpleCalc(
+      title: 'FD Calculator',
+      fields: [
+        {'label': 'Principal (₹)', 'c': _p},
+        {'label': 'Rate (% p.a.)', 'c': _r},
+        {'label': 'Years', 'c': _t},
+      ],
+      onCalc: _calc,
+      resultWidget: _resultCard('Maturity', _mat,
+          sub1: 'Principal', v1: _inv, sub2: 'Interest', v2: _mat - _inv),
+    );
   }
 }
 
@@ -429,82 +953,124 @@ class GstCalculator extends StatefulWidget {
 }
 
 class _GstCalculatorState extends State<GstCalculator> {
-  final _a = TextEditingController();
+  final _a = TextEditingController(text: '10000');
   double _rate = 18;
   String _mode = 'add';
-  String _res = '';
+  double _base = 0, _gst = 0, _total = 0;
 
   void _calc() {
     final a = double.tryParse(_a.text) ?? 0;
-    if (a <= 0) {
-      setState(() => _res = '⚠️ Amount daalo');
-      return;
-    }
-    double base, gst, total;
-    if (_mode == 'add') {
-      gst = a * _rate / 100;
-      base = a;
-      total = a + gst;
-    } else {
-      base = a * 100 / (100 + _rate);
-      gst = a - base;
-      total = a;
-    }
+    if (a <= 0) return;
     setState(() {
-      _res = 'Base: ₹${base.toStringAsFixed(2)}\n'
-          'GST ($_rate%): ₹${gst.toStringAsFixed(2)}\n'
-          'Total: ₹${total.toStringAsFixed(2)}';
+      if (_mode == 'add') {
+        _gst = a * _rate / 100;
+        _base = a;
+        _total = a + _gst;
+      } else {
+        _base = a * 100 / (100 + _rate);
+        _gst = a - _base;
+        _total = a;
+      }
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _calc();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('GST Calculator')),
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kBg,
+        title: Text('GST Calculator',
+            style: GoogleFonts.poppins(color: kTextWhite)),
+        iconTheme: const IconThemeData(color: kTextWhite),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Text('Amount (₹)',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 6),
             TextField(
               controller: _a,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                labelText: 'Amount (₹)',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.currency_rupee),
+              style: GoogleFonts.poppins(color: kTextWhite, fontSize: 15),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: kCard,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 16),
               ),
+              onChanged: (_) => _calc(),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<double>(
-              value: _rate,
-              decoration: const InputDecoration(labelText: 'GST Rate', border: OutlineInputBorder()),
-              items: [5.0, 12.0, 18.0, 28.0]
-                  .map((r) => DropdownMenuItem(value: r, child: Text('$r%')))
-                  .toList(),
-              onChanged: (v) => setState(() => _rate = v!),
+            Text('GST Rate',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 10,
+              children: [5.0, 12.0, 18.0, 28.0].map((r) {
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _rate = r);
+                    _calc();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 12),
+                    decoration: BoxDecoration(
+                      color: _rate == r ? kPurple : kCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text('$r%',
+                        style: GoogleFonts.poppins(
+                            color: kTextWhite,
+                            fontWeight: FontWeight.w600)),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 16),
-            DropdownButtonFormField<String>(
-              value: _mode,
-              decoration: const InputDecoration(labelText: 'Mode', border: OutlineInputBorder()),
-              items: const [
-                DropdownMenuItem(value: 'add', child: Text('Add GST')),
-                DropdownMenuItem(value: 'remove', child: Text('Remove GST')),
-              ],
-              onChanged: (v) => setState(() => _mode = v!),
+            Row(
+              children: ['add', 'remove'].map((m) {
+                final selected = _mode == m;
+                return Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      setState(() => _mode = m);
+                      _calc();
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      decoration: BoxDecoration(
+                        color: selected ? kPurple : kCard,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Center(
+                        child: Text(m == 'add' ? 'Add GST' : 'Remove GST',
+                            style: GoogleFonts.poppins(
+                                color: kTextWhite,
+                                fontWeight: FontWeight.w600)),
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calc,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F46E5),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Calculate', style: TextStyle(fontSize: 16)),
-            ),
-            if (_res.isNotEmpty) _resultBox(_res),
+            const SizedBox(height: 24),
+            _resultCard('Total', _total,
+                sub1: 'Base', v1: _base, sub2: 'GST', v2: _gst),
           ],
         ),
       ),
@@ -520,32 +1086,47 @@ class BmiCalculator extends StatefulWidget {
 }
 
 class _BmiCalculatorState extends State<BmiCalculator> {
-  final _w = TextEditingController();
-  final _h = TextEditingController();
-  String _res = '';
+  final _w = TextEditingController(text: '70');
+  final _h = TextEditingController(text: '170');
+  double _bmi = 0;
+  String _cat = '';
 
   void _calc() {
     final w = double.tryParse(_w.text) ?? 0;
     final h = (double.tryParse(_h.text) ?? 0) / 100;
-    if (w <= 0 || h <= 0) {
-      setState(() => _res = '⚠️ Weight aur Height daalo');
-      return;
-    }
-    final bmi = w / (h * h);
-    String cat;
-    if (bmi < 18.5) cat = '🔵 Underweight';
-    else if (bmi < 25) cat = '🟢 Normal';
-    else if (bmi < 30) cat = '🟡 Overweight';
-    else cat = '🔴 Obese';
-    setState(() => _res = 'BMI: ${bmi.toStringAsFixed(1)}\nCategory: $cat');
+    if (w <= 0 || h <= 0) return;
+    setState(() {
+      _bmi = w / (h * h);
+      if (_bmi < 18.5) {
+        _cat = 'Underweight';
+      } else if (_bmi < 25) {
+        _cat = 'Normal';
+      } else if (_bmi < 30) {
+        _cat = 'Overweight';
+      } else {
+        _cat = 'Obese';
+      }
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _calc();
   }
 
   @override
   Widget build(BuildContext context) {
-    return _calcScreen('BMI Calculator', [
-      _field('Weight (kg)', _w, '70'),
-      _field('Height (cm)', _h, '170'),
-    ], _calc, _res);
+    return _simpleCalc(
+      title: 'BMI Calculator',
+      fields: [
+        {'label': 'Weight (kg)', 'c': _w},
+        {'label': 'Height (cm)', 'c': _h},
+      ],
+      onCalc: _calc,
+      resultWidget: _resultCard('BMI', _bmi,
+          sub1: 'Category', v1: 0, sub2: '', v2: 0, customCat: _cat),
+    );
   }
 }
 
@@ -567,14 +1148,14 @@ class _AgeCalculatorState extends State<AgeCalculator> {
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
     );
-    if (d != null) setState(() => _dob = d);
+    if (d != null) {
+      setState(() => _dob = d);
+      _calc();
+    }
   }
 
   void _calc() {
-    if (_dob == null) {
-      setState(() => _res = '⚠️ DOB select karo');
-      return;
-    }
+    if (_dob == null) return;
     final dob = _dob!;
     final now = DateTime.now();
     int y = now.year - dob.year;
@@ -588,42 +1169,76 @@ class _AgeCalculatorState extends State<AgeCalculator> {
       y--;
       m += 12;
     }
-    final days = now.difference(dob).inDays;
-    setState(() {
-      _res = 'Age: $y years, $m months, $d days\n'
-          'Total Months: ${y * 12 + m}\n'
-          'Total Days: $days';
-    });
+    setState(() => _res = '$y years, $m months, $d days');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Age Calculator')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kBg,
+        title: Text('Age Calculator',
+            style: GoogleFonts.poppins(color: kTextWhite)),
+        iconTheme: const IconThemeData(color: kTextWhite),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            OutlinedButton.icon(
-              onPressed: _pick,
-              icon: const Icon(Icons.calendar_today),
-              label: Text(_dob == null
-                  ? 'Select Date of Birth'
-                  : 'DOB: ${_dob!.day}/${_dob!.month}/${_dob!.year}'),
-              style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
+            Material(
+              color: kCard,
+              borderRadius: BorderRadius.circular(16),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(16),
+                onTap: _pick,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.calendar_today,
+                          color: kPurpleLight),
+                      const SizedBox(width: 14),
+                      Text(
+                        _dob == null
+                            ? 'Select Date of Birth'
+                            : '${_dob!.day}/${_dob!.month}/${_dob!.year}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            color: kTextWhite,
+                            fontWeight: FontWeight.w500),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calc,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F46E5),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            if (_res.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [kPurple, Color(0xFF4A3AFF)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    Text('Your Age',
+                        style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: kTextWhite.withValues(alpha: 0.9))),
+                    const SizedBox(height: 8),
+                    Text(_res,
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.poppins(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: kTextWhite)),
+                  ],
+                ),
               ),
-              child: const Text('Calculate', style: TextStyle(fontSize: 16)),
-            ),
-            if (_res.isNotEmpty) _resultBox(_res),
           ],
         ),
       ),
@@ -639,79 +1254,104 @@ class DateCalculator extends StatefulWidget {
 }
 
 class _DateCalculatorState extends State<DateCalculator> {
-  DateTime? _s;
-  DateTime? _e;
+  DateTime? _s, _e;
   String _res = '';
 
-  Future<void> _pick(bool start) async {
+  Future<void> _pick(bool isStart) async {
     final d = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime(2100),
     );
-    if (d != null) setState(() => start ? _s = d : _e = d);
+    if (d != null) {
+      setState(() => isStart ? _s = d : _e = d);
+      _calc();
+    }
   }
 
   void _calc() {
-    if (_s == null || _e == null) {
-      setState(() => _res = '⚠️ Dono dates select karo');
-      return;
-    }
+    if (_s == null || _e == null) return;
     final diff = _e!.difference(_s!).inDays.abs();
-    setState(() {
-      _res = 'Total Days: $diff\n'
-          'Weeks: ${diff ~/ 7} weeks ${diff % 7} days\n'
-          'Months (approx): ${(diff / 30.44).toStringAsFixed(1)}\n'
-          'Years (approx): ${(diff / 365.25).toStringAsFixed(2)}';
-    });
+    setState(() => _res = '$diff days');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Date Calculator')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kBg,
+        title: Text('Date Calculator',
+            style: GoogleFonts.poppins(color: kTextWhite)),
+        iconTheme: const IconThemeData(color: kTextWhite),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            OutlinedButton.icon(
-              onPressed: () => _pick(true),
-              icon: const Icon(Icons.calendar_today),
-              label: Text(_s == null
-                  ? 'Start Date'
-                  : 'Start: ${_s!.day}/${_s!.month}/${_s!.year}'),
-              style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
-            ),
+            _dateBtn(_s, 'Start Date', () => _pick(true)),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: () => _pick(false),
-              icon: const Icon(Icons.calendar_today),
-              label: Text(_e == null
-                  ? 'End Date'
-                  : 'End: ${_e!.day}/${_e!.month}/${_e!.year}'),
-              style: OutlinedButton.styleFrom(padding: const EdgeInsets.all(16)),
-            ),
+            _dateBtn(_e, 'End Date', () => _pick(false)),
             const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _calc,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F46E5),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
+            if (_res.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [kPurple, Color(0xFF4A3AFF)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    Text('Difference',
+                        style: GoogleFonts.poppins(
+                            fontSize: 13, color: kTextWhite)),
+                    const SizedBox(height: 8),
+                    Text(_res,
+                        style: GoogleFonts.poppins(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: kTextWhite)),
+                  ],
+                ),
               ),
-              child: const Text('Calculate', style: TextStyle(fontSize: 16)),
-            ),
-            if (_res.isNotEmpty) _resultBox(_res),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _dateBtn(DateTime? d, String label, VoidCallback onTap) {
+    return Material(
+      color: kCard,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Row(
+            children: [
+              const Icon(Icons.calendar_today, color: kPurpleLight),
+              const SizedBox(width: 14),
+              Text(
+                d == null ? label : '${d.day}/${d.month}/${d.year}',
+                style: GoogleFonts.poppins(
+                    fontSize: 15,
+                    color: kTextWhite,
+                    fontWeight: FontWeight.w500),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ═══════ UNIT CONVERTER ═══════
+// ═══════ UNIT ═══════
 class UnitConverter extends StatefulWidget {
   const UnitConverter({super.key});
   @override
@@ -722,7 +1362,7 @@ class _UnitConverterState extends State<UnitConverter> {
   String _cat = 'length';
   String _from = 'm';
   String _to = 'km';
-  final _val = TextEditingController();
+  final _val = TextEditingController(text: '1');
   String _res = '';
 
   final Map<String, Map<String, double>> _units = {
@@ -735,7 +1375,7 @@ class _UnitConverterState extends State<UnitConverter> {
   void _convert() {
     final v = double.tryParse(_val.text) ?? 0;
     if (v == 0) {
-      setState(() => _res = '⚠️ Value daalo');
+      setState(() => _res = '');
       return;
     }
     double r;
@@ -750,129 +1390,295 @@ class _UnitConverterState extends State<UnitConverter> {
     } else {
       r = v * _units[_cat]![_from]! / _units[_cat]![_to]!;
     }
-    setState(() => _res = '$v $_from = ${r.toStringAsFixed(4)} $_to');
+    setState(() => _res = '${r.toStringAsFixed(4)} $_to');
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _convert();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Unit Converter')),
+      backgroundColor: kBg,
+      appBar: AppBar(
+        backgroundColor: kBg,
+        title: Text('Unit Converter',
+            style: GoogleFonts.poppins(color: kTextWhite)),
+        iconTheme: const IconThemeData(color: kTextWhite),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            DropdownButtonFormField<String>(
-              value: _cat,
-              decoration: const InputDecoration(labelText: 'Category', border: OutlineInputBorder()),
-              items: const [
-                DropdownMenuItem(value: 'length', child: Text('Length')),
-                DropdownMenuItem(value: 'weight', child: Text('Weight')),
-                DropdownMenuItem(value: 'temp', child: Text('Temperature')),
-              ],
-              onChanged: (v) {
-                setState(() {
-                  _cat = v!;
-                  _from = _u.first;
-                  _to = _u.last;
-                });
-              },
+            Text('Category',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 6),
+            Wrap(
+              spacing: 8,
+              children: ['length', 'weight', 'temp'].map((c) {
+                final sel = _cat == c;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _cat = c;
+                      _from = _u.first;
+                      _to = _u.last;
+                    });
+                    _convert();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 10),
+                    decoration: BoxDecoration(
+                      color: sel ? kPurple : kCard,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      c == 'length' ? 'Length' : (c == 'weight' ? 'Weight' : 'Temp'),
+                      style: GoogleFonts.poppins(
+                          color: kTextWhite, fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
             const SizedBox(height: 16),
+            Text('Value',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 6),
             TextField(
               controller: _val,
               keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: 'Value', border: OutlineInputBorder()),
+              style: GoogleFonts.poppins(color: kTextWhite, fontSize: 15),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: kCard,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 16),
+              ),
+              onChanged: (_) => _convert(),
             ),
             const SizedBox(height: 16),
-            Row(children: [
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _from,
-                  decoration: const InputDecoration(labelText: 'From', border: OutlineInputBorder()),
-                  items: _u.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                  onChanged: (v) => setState(() => _from = v!),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: DropdownButtonFormField<String>(
-                  value: _to,
-                  decoration: const InputDecoration(labelText: 'To', border: OutlineInputBorder()),
-                  items: _u.map((u) => DropdownMenuItem(value: u, child: Text(u))).toList(),
-                  onChanged: (v) => setState(() => _to = v!),
-                ),
-              ),
-            ]),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _convert,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF4F46E5),
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-              ),
-              child: const Text('Convert', style: TextStyle(fontSize: 16)),
+            Row(
+              children: [
+                Expanded(child: _dropDown('From', _from, _u, (v) {
+                  setState(() => _from = v!);
+                  _convert();
+                })),
+                const SizedBox(width: 12),
+                Expanded(child: _dropDown('To', _to, _u, (v) {
+                  setState(() => _to = v!);
+                  _convert();
+                })),
+              ],
             ),
-            if (_res.isNotEmpty) _resultBox(_res),
+            const SizedBox(height: 24),
+            if (_res.isNotEmpty)
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                      colors: [kPurple, Color(0xFF4A3AFF)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    Text('Result',
+                        style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: kTextWhite.withValues(alpha: 0.9))),
+                    const SizedBox(height: 8),
+                    Text(_res,
+                        style: GoogleFonts.poppins(
+                            fontSize: 28,
+                            fontWeight: FontWeight.bold,
+                            color: kTextWhite)),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
   }
+
+  Widget _dropDown(String label, String value, List<String> items,
+      ValueChanged<String?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: kCard,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              dropdownColor: kCard2,
+              icon: const Icon(Icons.keyboard_arrow_down, color: kTextWhite),
+              style: GoogleFonts.poppins(color: kTextWhite, fontSize: 15),
+              items: items.map((u) {
+                return DropdownMenuItem(
+                    value: u,
+                    child: Text(u,
+                        style: GoogleFonts.poppins(color: kTextWhite)));
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 // ═══════ HELPERS ═══════
-Widget _field(String label, TextEditingController c, String hint) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 14),
-    child: TextField(
-      controller: c,
-      keyboardType: TextInputType.number,
-      decoration: InputDecoration(
-        labelText: label,
-        hintText: hint,
-        border: const OutlineInputBorder(),
-      ),
-    ),
-  );
-}
-
-Widget _resultBox(String text) {
-  return Container(
-    margin: const EdgeInsets.only(top: 20),
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: Colors.indigo.shade50,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: Colors.indigo.shade200),
-    ),
-    child: Text(text, style: const TextStyle(fontSize: 16, height: 1.8)),
-  );
-}
-
-Widget _calcScreen(String title, List<Widget> fields, VoidCallback onCalc, String res) {
+Widget _simpleCalc({
+  required String title,
+  required List<Map<String, dynamic>> fields,
+  required VoidCallback onCalc,
+  required Widget resultWidget,
+}) {
   return Scaffold(
-    appBar: AppBar(title: Text(title)),
+    backgroundColor: kBg,
+    appBar: AppBar(
+      backgroundColor: kBg,
+      title: Text(title, style: GoogleFonts.poppins(color: kTextWhite)),
+      iconTheme: const IconThemeData(color: kTextWhite),
+    ),
     body: SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          ...fields,
-          const SizedBox(height: 6),
-          ElevatedButton(
-            onPressed: onCalc,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF4F46E5),
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 16),
-            ),
-            child: const Text('Calculate', style: TextStyle(fontSize: 16)),
-          ),
-          if (res.isNotEmpty) _resultBox(res),
+          ...fields.map((f) => Padding(
+                padding: const EdgeInsets.only(bottom: 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(f['label'] as String,
+                        style: GoogleFonts.poppins(
+                            fontSize: 13, color: kTextGrey)),
+                    const SizedBox(height: 6),
+                    TextField(
+                      controller: f['c'] as TextEditingController,
+                      keyboardType: TextInputType.number,
+                      style: GoogleFonts.poppins(
+                          color: kTextWhite, fontSize: 15),
+                      decoration: InputDecoration(
+                        filled: true,
+                        fillColor: kCard,
+                        border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16, vertical: 16),
+                      ),
+                      onChanged: (_) => onCalc(),
+                    ),
+                  ],
+                ),
+              )),
+          const SizedBox(height: 10),
+          resultWidget,
         ],
       ),
+    ),
+  );
+}
+
+Widget _resultCard(String title, double value,
+    {required String sub1,
+    required double v1,
+    required String sub2,
+    required double v2,
+    String? customCat}) {
+  return Container(
+    padding: const EdgeInsets.all(24),
+    decoration: BoxDecoration(
+      gradient: const LinearGradient(
+        colors: [kPurple, Color(0xFF4A3AFF)],
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+      ),
+      borderRadius: BorderRadius.circular(20),
+      boxShadow: [
+        BoxShadow(
+          color: kPurple.withValues(alpha: 0.4),
+          blurRadius: 20,
+          offset: const Offset(0, 8),
+        ),
+      ],
+    ),
+    child: Column(
+      children: [
+        Text(title,
+            style: GoogleFonts.poppins(
+                fontSize: 13, color: kTextWhite.withValues(alpha: 0.9))),
+        const SizedBox(height: 6),
+        Text(value.toStringAsFixed(0),
+            style: GoogleFonts.poppins(
+                fontSize: 32,
+                fontWeight: FontWeight.bold,
+                color: kTextWhite)),
+        if (customCat != null) ...[
+          const SizedBox(height: 4),
+          Text(customCat,
+              style: GoogleFonts.poppins(fontSize: 14, color: kTextWhite)),
+        ],
+        if (sub1.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Divider(color: kTextWhite.withValues(alpha: 0.2)),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(sub1,
+                      style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: kTextWhite.withValues(alpha: 0.7))),
+                  Text('₹ ${v1.toStringAsFixed(0)}',
+                      style: GoogleFonts.poppins(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: kTextWhite)),
+                ],
+              ),
+              if (sub2.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(sub2,
+                        style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            color: kTextWhite.withValues(alpha: 0.7))),
+                    Text('₹ ${v2.toStringAsFixed(0)}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: kTextWhite)),
+                  ],
+                ),
+            ],
+          ),
+        ],
+      ],
     ),
   );
 }
