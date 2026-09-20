@@ -117,8 +117,9 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return double.parse(s);
   }
 
-  Widget _btn(String label, {Color? bg, Color? fg}) {
+  Widget _btn(String label, {Color? bg, Color? fg, int flex = 1}) {
     return Expanded(
+      flex: flex,
       child: Padding(
         padding: const EdgeInsets.all(4),
         child: AspectRatio(
@@ -181,10 +182,11 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                     _btn('1'), _btn('2'), _btn('3'),
                     _btn('+', bg: Colors.indigo.shade100),
                   ]),
+                  // ✅ FIXED: single '=' button with double width
                   Row(children: [
-                    _btn('0'), _btn('.'),
-                    _btn('=', bg: Colors.green.shade400, fg: Colors.white),
-                    _btn('=', bg: Colors.green.shade400, fg: Colors.white),
+                    _btn('0'),
+                    _btn('.'),
+                    _btn('=', bg: Colors.green.shade400, fg: Colors.white, flex: 2),
                   ]),
                 ],
               ),
