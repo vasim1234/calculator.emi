@@ -3442,8 +3442,10 @@ class _UnitConverterState extends State<UnitConverter> {
     },
   };
 
-  List<String> get _u =>
-      _cat == 'temp' ? ['C', 'F', 'K'] : _units[_cat]!.keys.toList();
+  List<String> get _u {
+    if (_cat == 'temp') return ['C', 'F', 'K'];
+    return _units[_cat]!.keys.toList();
+  }
 
   void _convert() {
     final v = double.tryParse(_val.text) ?? 0;
@@ -3454,12 +3456,20 @@ class _UnitConverterState extends State<UnitConverter> {
     double r;
     if (_cat == 'temp') {
       double c;
-      if (_from == 'C') c = v;
-      else if (_from == 'F') c = (v - 32) * 5 / 9;
-      else c = v - 273.15;
-      if (_to == 'C') r = c;
-      else if (_to == 'F') r = c * 9 / 5 + 32;
-      else r = c + 273.15;
+      if (_from == 'C') {
+        c = v;
+      } else if (_from == 'F') {
+        c = (v - 32) * 5 / 9;
+      } else {
+        c = v - 273.15;
+      }
+      if (_to == 'C') {
+        r = c;
+      } else if (_to == 'F') {
+        r = c * 9 / 5 + 32;
+      } else {
+        r = c + 273.15;
+      }
     } else {
       r = v * _units[_cat]![_from]! / _units[_cat]![_to]!;
     }
@@ -3472,8 +3482,44 @@ class _UnitConverterState extends State<UnitConverter> {
     _convert();
   }
 
+  Widget _dropDown(String label, String value, List<String> items,
+      ValueChanged<String?> onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            color: kCard,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: value,
+              isExpanded: true,
+              dropdownColor: kCard2,
+              icon: const Icon(Icons.keyboard_arrow_down, color: kTextWhite),
+              style: GoogleFonts.poppins(color: kTextWhite, fontSize: 15),
+              items: items.map((u) {
+                return DropdownMenuItem(
+                    value: u,
+                    child: Text(u,
+                        style: GoogleFonts.poppins(color: kTextWhite)));
+              }).toList(),
+              onChanged: onChanged,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final units = _u;
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
@@ -3544,13 +3590,13 @@ class _UnitConverterState extends State<UnitConverter> {
             Row(
               children: [
                 Expanded(
-                    child: _dropDown('From', _from, _u, (v) {
+                    child: _dropDown('From', _from, units, (v) {
                   setState(() => _from = v!);
                   _convert();
                 })),
                 const SizedBox(width: 12),
                 Expanded(
-                    child: _dropDown('To', _to, _u, (v) {
+                    child: _dropDown('To', _to, units, (v) {
                   setState(() => _to = v!);
                   _convert();
                 })),
@@ -3583,41 +3629,6 @@ class _UnitConverterState extends State<UnitConverter> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _dropDown(String label, String value, List<String> items,
-      ValueChanged<String?> onChanged) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label,
-            style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
-        const SizedBox(height: 6),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            color: kCard,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: value,
-              isExpanded: true,
-              dropdownColor: kCard2,
-              icon: const Icon(Icons.keyboard_arrow_down, color: kTextWhite),
-              style: GoogleFonts.poppins(color: kTextWhite, fontSize: 15),
-              items: items.map((u) {
-                return DropdownMenuItem(
-                    value: u,
-                    child: Text(u,
-                        style: GoogleFonts.poppins(color: kTextWhite)));
-              }).toList(),
-              onChanged: onChanged,
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
