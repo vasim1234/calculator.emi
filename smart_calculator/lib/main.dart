@@ -5,6 +5,8 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 // ═══════ COLORS ═══════
 const kBg = Color(0xFF000000);
@@ -806,46 +808,516 @@ class ToolsScreen extends StatelessWidget {
 }
 
 // ═══════ CURRENCY ═══════
-class CurrencyScreen extends StatelessWidget {
+class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({super.key});
+  @override
+  State<CurrencyScreen> createState() => _CurrencyScreenState();
+}
+
+class _CurrencyScreenState extends State<CurrencyScreen> {
+  final _amount = TextEditingController(text: '1');
+  String _from = 'USD';
+  String _to = 'INR';
+  double _rate = 0;
+  double _result = 0;
+  bool _loading = true;
+  String _error = '';
+  DateTime? _lastUpdated;
+
+  // Currency list with names and flags
+  final Map<String, Map<String, String>> _currencies = {
+    'USD': {'name': 'US Dollar', 'flag': '🇺🇸'},
+    'INR': {'name': 'Indian Rupee', 'flag': '🇮🇳'},
+    'EUR': {'name': 'Euro', 'flag': '🇪🇺'},
+    'GBP': {'name': 'British Pound', 'flag': '🇬🇧'},
+    'JPY': {'name': 'Japanese Yen', 'flag': '🇯🇵'},
+    'AUD': {'name': 'Australian Dollar', 'flag': '🇦🇺'},
+    'CAD': {'name': 'Canadian Dollar', 'flag': '🇨🇦'},
+    'CHF': {'name': 'Swiss Franc', 'flag': '🇨🇭'},
+    'CNY': {'name': 'Chinese Yuan', 'flag': '🇨🇳'},
+    'AED': {'name': 'UAE Dirham', 'flag': '🇦🇪'},
+    'SAR': {'name': 'Saudi Riyal', 'flag': '🇸🇦'},
+    'SGD': {'name': 'Singapore Dollar', 'flag': '🇸🇬'},
+    'HKD': {'name': 'Hong Kong Dollar', 'flag': '🇭🇰'},
+    'NZD': {'name': 'New Zealand Dollar', 'flag': '🇳🇿'},
+    'KRW': {'name': 'South Korean Won', 'flag': '🇰🇷'},
+    'THB': {'name': 'Thai Baht', 'flag': '🇹🇭'},
+    'MYR': {'name': 'Malaysian Ringgit', 'flag': '🇲🇾'},
+    'IDR': {'name': 'Indonesian Rupiah', 'flag': '🇮🇩'},
+    'PHP': {'name': 'Philippine Peso', 'flag': '🇵🇭'},
+    'PKR': {'name': 'Pakistani Rupee', 'flag': '🇵🇰'},
+    'BDT': {'name': 'Bangladeshi Taka', 'flag': '🇧🇩'},
+    'LKR': {'name': 'Sri Lankan Rupee', 'flag': '🇱🇰'},
+    'NPR': {'name': 'Nepalese Rupee', 'flag': '🇳🇵'},
+    'ZAR': {'name': 'South African Rand', 'flag': '🇿🇦'},
+    'BRL': {'name': 'Brazilian Real', 'flag': '🇧🇷'},
+    'MXN': {'name': 'Mexican Peso', 'flag': '🇲🇽'},
+    'RUB': {'name': 'Russian Ruble', 'flag': '🇷🇺'},
+    'TRY': {'name': 'Turkish Lira', 'flag': '🇹🇷'},
+    'SEK': {'name': 'Swedish Krona', 'flag': '🇸🇪'},
+    'NOK': {'name': 'Norwegian Krone', 'flag': '🇳🇴'},
+  };
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRate();
+  }
+
+  // ═══════ FETCH LIVE RATE FROM FRANKFURTER API ═══════
+  Future<void> _fetchRate() async {
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+
+    try {
+      // Frankfurter API - ECB official data
+      final url = _from == _to
+          ? null
+          : Uri.parse('https://api.frankfurter.dev/v2/rate/$_from/$_to');
+
+      if (url == null) {
+        // Same currency
+        setState(() {
+          _rate = 1;
+          _result = double.tryParse(_amount.text) ?? 0;
+          _loading = false;
+          _lastUpdated = DateTime.now();
+        });
+        return;
+      }
+
+      final response = await http.get(url).timeout(
+            const Duration(seconds: 10),
+          );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final rate = (data['rate'] as num).toDouble();
+        setState(() {
+          _rate = rate;
+          _result = (double.tryParse(_amount.text) ?? 0) * rate;
+          _loading = false;
+          _lastUpdated = DateTime.now();
+        });
+      } else {
+        throw Exception('API Error: ${response.statusCode}');
+      }
+    } catch (e) {
+      // Fallback: approximate rates (offline)
+      final fallbackRates = _getFallbackRate(_from, _to);
+      if (fallbackRates > 0) {
+        setState(() {
+          _rate = fallbackRates;
+          _result = (double.tryParse(_amount.text) ?? 0) * fallbackRates;
+          _loading = false;
+          _error = 'Offline: approximate rate';
+        });
+      } else {
+        setState(() {
+          _loading = false;
+          _error = 'Failed to fetch rate. Check internet.';
+        });
+      }
+    }
+  }
+
+  // Fallback rates (agar internet na ho)
+  double _getFallbackRate(String from, String to) {
+    final usdRates = {
+      'USD': 1.0,
+      'INR': 83.5,
+      'EUR': 0.92,
+      'GBP': 0.79,
+      'JPY': 149.5,
+      'AUD': 1.52,
+      'CAD': 1.36,
+      'CHF': 0.88,
+      'CNY': 7.24,
+      'AED': 3.67,
+      'SAR': 3.75,
+      'SGD': 1.34,
+    };
+    final fromUsd = usdRates[from];
+    final toUsd = usdRates[to];
+    if (fromUsd == null || toUsd == null) return 0;
+    return toUsd / fromUsd;
+  }
+
+  // ═══════ CALCULATE ON TYPE (LIVE PREVIEW) ═══════
+  void _calculate() {
+    final amt = double.tryParse(_amount.text) ?? 0;
+    setState(() {
+      _result = amt * _rate;
+    });
+  }
+
+  // ═══════ SWAP CURRENCIES ═══════
+  void _swap() {
+    setState(() {
+      final temp = _from;
+      _from = _to;
+      _to = temp;
+    });
+    _fetchRate();
+  }
+
+  // ═══════ CURRENCY PICKER ═══════
+  Future<void> _pickCurrency(bool isFrom) async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: kCard,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: kTextGrey,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text('Select Currency',
+                  style: GoogleFonts.poppins(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: kTextWhite)),
+              const SizedBox(height: 12),
+              Expanded(
+                child: ListView.builder(
+                  itemCount: _currencies.length,
+                  itemBuilder: (context, i) {
+                    final code = _currencies.keys.elementAt(i);
+                    final info = _currencies[code]!;
+                    final isSelected = (isFrom ? _from : _to) == code;
+                    return ListTile(
+                      onTap: () => Navigator.pop(context, code),
+                      leading: Text(info['flag']!,
+                          style: const TextStyle(fontSize: 28)),
+                      title: Text(code,
+                          style: GoogleFonts.poppins(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: isSelected ? kRed : kTextWhite)),
+                      subtitle: Text(info['name']!,
+                          style: GoogleFonts.poppins(
+                              fontSize: 12, color: kTextGrey)),
+                      trailing: isSelected
+                          ? const Icon(Icons.check, color: kRed)
+                          : null,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (selected != null) {
+      setState(() {
+        if (isFrom) {
+          _from = selected;
+        } else {
+          _to = selected;
+        }
+      });
+      _fetchRate();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: kBg,
-        title: Text('Currency',
+        title: Text('Currency Converter',
             style: GoogleFonts.poppins(color: kTextWhite)),
         iconTheme: const IconThemeData(color: kTextWhite),
+        actions: [
+          IconButton(
+            onPressed: _fetchRate,
+            icon: const Icon(Icons.refresh, color: kRed),
+            tooltip: 'Refresh Rates',
+          ),
+        ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(24),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ═══ FROM CURRENCY ═══
+            Text('From',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () => _pickCurrency(true),
+              child: Container(
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: kCard,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: kRed.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Text(_currencies[_from]!['flag']!,
+                        style: const TextStyle(fontSize: 32)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_from,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: kTextWhite)),
+                          Text(_currencies[_from]!['name']!,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12, color: kTextGrey)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.keyboard_arrow_down, color: kTextWhite),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Amount input
+            TextField(
+              controller: _amount,
+              keyboardType:
+                  const TextInputType.numberWithOptions(decimal: true),
+              style: GoogleFonts.poppins(
+                  color: kTextWhite, fontSize: 22, fontWeight: FontWeight.bold),
+              decoration: InputDecoration(
+                filled: true,
+                fillColor: kCard,
+                hintText: 'Enter amount',
+                hintStyle: GoogleFonts.poppins(color: kTextGrey),
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(14),
+                    borderSide: BorderSide.none),
+                contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16, vertical: 18),
+              ),
+              onChanged: (_) => _calculate(),
+            ),
+            const SizedBox(height: 16),
+
+            // ═══ SWAP BUTTON ═══
+            Center(
+              child: GestureDetector(
+                onTap: _swap,
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: kRed,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: kRed.withValues(alpha: 0.5),
+                        blurRadius: 15,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(Icons.swap_vert,
+                      color: Colors.white, size: 24),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ═══ TO CURRENCY ═══
+            Text('To',
+                style: GoogleFonts.poppins(fontSize: 13, color: kTextGrey)),
+            const SizedBox(height: 6),
+            GestureDetector(
+              onTap: () => _pickCurrency(false),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: kCard,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: kRed.withValues(alpha: 0.2)),
+                ),
+                child: Row(
+                  children: [
+                    Text(_currencies[_to]!['flag']!,
+                        style: const TextStyle(fontSize: 32)),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(_to,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: kTextWhite)),
+                          Text(_currencies[_to]!['name']!,
+                              style: GoogleFonts.poppins(
+                                  fontSize: 12, color: kTextGrey)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.keyboard_arrow_down, color: kTextWhite),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // ═══ RESULT CARD ═══
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [kRed, kRedDark],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: kRed.withValues(alpha: 0.4),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  if (_loading)
+                    const Padding(
+                      padding: EdgeInsets.all(8),
+                      child: CircularProgressIndicator(
+                          color: Colors.white, strokeWidth: 2),
+                    )
+                  else ...[
+                    Text('Converted Amount',
+                        style: GoogleFonts.poppins(
+                            fontSize: 13,
+                            color: Colors.white.withValues(alpha: 0.9))),
+                    const SizedBox(height: 8),
+                    Text(
+                      '${_currencies[_to]!['flag']} ${_result.toStringAsFixed(2)} $_to',
+                      style: GoogleFonts.poppins(
+                          fontSize: 26,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Divider(color: Colors.white.withValues(alpha: 0.2)),
+                    const SizedBox(height: 8),
+                    Text(
+                      '1 $_from = ${_rate.toStringAsFixed(4)} $_to',
+                      style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.9)),
+                    ),
+                    const SizedBox(height: 6),
+                    if (_lastUpdated != null)
+                      Text(
+                        'Updated: ${_lastUpdated!.hour}:${_lastUpdated!.minute.toString().padLeft(2, '0')} ${_lastUpdated!.day}/${_lastUpdated!.month}/${_lastUpdated!.year}',
+                        style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            color: Colors.white.withValues(alpha: 0.7)),
+                      ),
+                  ],
+                ],
+              ),
+            ),
+
+            if (_error.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: kRed.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: kRed.withValues(alpha: 0.3)),
                 ),
-                child: const Icon(Icons.currency_exchange,
-                    color: kRed, size: 50),
+                child: Row(
+                  children: [
+                    const Icon(Icons.info_outline, color: kRed, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(_error,
+                          style: GoogleFonts.poppins(
+                              fontSize: 12, color: kRed)),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 20),
-              Text('Currency Converter',
-                  style: GoogleFonts.poppins(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: kTextWhite)),
-              const SizedBox(height: 8),
-              Text('Live rates coming soon...',
-                  style: GoogleFonts.poppins(fontSize: 14, color: kTextGrey)),
             ],
-          ),
+
+            const SizedBox(height: 20),
+
+            // Popular conversions
+            Text('Popular Conversions',
+                style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextWhite)),
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _quickPair('USD', 'INR'),
+                _quickPair('EUR', 'INR'),
+                _quickPair('GBP', 'INR'),
+                _quickPair('AED', 'INR'),
+                _quickPair('USD', 'EUR'),
+                _quickPair('INR', 'USD'),
+              ],
+            ),
+          ],
         ),
+      ),
+    );
+  }
+
+  Widget _quickPair(String from, String to) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _from = from;
+          _to = to;
+        });
+        _fetchRate();
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: kCard,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: kRed.withValues(alpha: 0.3)),
+        ),
+        child: Text('$from → $to',
+            style: GoogleFonts.poppins(
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+                color: kTextWhite)),
       ),
     );
   }
