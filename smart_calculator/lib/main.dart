@@ -125,58 +125,211 @@ class BasicCalculator extends StatefulWidget {
 
 class _BasicCalculatorState extends State<BasicCalculator> {
   String _display = '0';
+  String _preview = '';
+
   static const Color softRed = Color(0xFFE63946);
   static const Color darkGrey = Color(0xFF2A2A2A);
 
+  // ═══════ MAIN KEY HANDLER ═══════
   void _onKey(String v) {
     setState(() {
       if (v == 'C') {
         _display = '0';
+        _preview = '';
       } else if (v == '⌫') {
-        _display = _display.length > 1
-            ? _display.substring(0, _display.length - 1)
-            : '0';
-      } else if (v == '=') {
-        try {
-          final result = _eval(_display);
-          _display = result.toStringAsFixed(
-              result.truncateToDouble() == result ? 0 : 4);
-        } catch (e) {
-          _display = 'Error';
+        if (_display.length > 1) {
+          _display = _display.substring(0, _display.length - 1);
+        } else {
+          _display = '0';
         }
+        _updatePreview();
+      } else if (v == '=') {
+        _handleEquals();
       } else {
+        // Digit ya operator add karo
         if (_display == '0' && '0123456789.'.contains(v)) {
           _display = v;
         } else {
           _display += v;
         }
+        _updatePreview();
       }
     });
   }
 
+  // ═══════ LIVE PREVIEW UPDATE ═══════
+  void _updatePreview() {
+    // Sirf complete expressions ka preview dikhao
+    // Jaise "1+1" → "= 2"
+    // Lekin "1+" ya "1+1+" → preview nahi (last operator ignore)
+    final cleaned = _cleanExpression(_display);
+    if (cleaned.isEmpty) {
+      _preview = '';
+      return;
+    }
+
+    // Agar expression mein koi operator hai toh hi preview dikhao
+    if (!cleaned.contains(RegExp(r'[+\-×÷%]'))) {
+      _preview = '';
+      return;
+    }
+
+    // Agar last character operator hai toh preview mat dikhao
+    if (_display.isNotEmpty &&
+        '+-×÷%'.contains(_display[_display.length - 1])) {
+      // Lekin agar usse pehle bhi operator hai, tab error
+      if (_display.length > 1 &&
+          '+-×÷%'.contains(_display[_display.length - 2])) {
+        _preview = '';
+        return;
+      }
+      // Last operator hata ke preview try karo
+      final temp = _display.substring(0, _display.length - 1);
+      try {
+        final result = _eval(temp);
+        _preview = '= ${_formatResult(result)}';
+      } catch (e) {
+        _preview = '';
+      }
+      return;
+    }
+
+    try {
+      final result = _eval(_display);
+      _preview = '= ${_formatResult(result)}';
+    } catch (e) {
+      _preview = '';
+    }
+  }
+
+  // ═══════ EQUALS HANDLER ═══════
+  void _handleEquals() {
+    // Extra operators ignore karo (last mein)
+    String expr = _display;
+    while (expr.isNotEmpty && '+-×÷'.contains(expr[expr.length - 1])) {
+      expr = expr.substring(0, expr.length - 1);
+    }
+
+    if (expr.isEmpty) {
+      _display = '0';
+      _preview = '';
+      return;
+    }
+
+    try {
+      final result = _eval(expr);
+      _display = _formatResult(result);
+      _preview = '';
+    } catch (e) {
+      _display = 'Error';
+      _preview = '';
+    }
+  }
+
+  // ═══════ EXPRESSION CLEANER ═══════
+  // Yeh percentage ko handle karta hai + extra operators hatata hai
+  String _cleanExpression(String expr) {
+    if (expr.isEmpty) return expr;
+
+    // Multiple operators ko merge karo (jaise ++ ko + karo)
+    String cleaned = expr;
+    // Remove trailing operators (extra + - × ÷)
+    while (cleaned.isNotEmpty && '+-×÷'.contains(cleaned[cleaned.length - 1])) {
+      cleaned = cleaned.substring(0, cleaned.length - 1);
+    }
+    return cleaned;
+  }
+
+  // ═══════ RESULT FORMATTER ═══════
+  String _formatResult(double r) {
+    if (r.isNaN || r.isInfinite) return 'Error';
+    if (r.truncateToDouble() == r) {
+      return r.toInt().toString();
+    }
+    return r.toStringAsFixed(4).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
+  }
+
+  // ═══════ EVALUATOR (with Percentage support) ═══════
   double _eval(String s) {
+    // Percentage logic pehle handle karo
+    s = _handlePercentage(s);
     s = s.replaceAll('×', '*').replaceAll('÷', '/');
+    if (s.isEmpty) throw Exception('Empty');
     return _parse(s);
   }
 
+  // ═══════ PERCENTAGE HANDLER ═══════
+  // 50-10% → 50-5 → 45
+  // 10-10% → 10-1 → 9
+  // 100+10% → 100+10 → 110
+  // 10% → 0.1
+  String _handlePercentage(String expr) {
+    if (!expr.contains('%')) return expr;
+
+    // Case 1: "A op B%" → replace B% with (A * B / 100)
+    // Jaise "50-10%" → "50-(50*10/100)" = "50-5"
+    // Jaise "100+10%" → "100+(100*10/100)" = "100+10"
+    // Jaise "200×10%" → "200×(200*10/100)" = "200×20"
+
+    final percentPattern =
+        RegExp(r'(\d+\.?\d*)\s*([+\-×÷])\s*(\d+\.?\d*)%');
+
+    while (percentPattern.hasMatch(expr)) {
+      expr = expr.replaceFirstMapped(percentPattern, (m) {
+        final base = m.group(1)!;
+        final op = m.group(2)!;
+        final pct = m.group(3)!;
+        // For + and -: percentage of base
+        if (op == '+' || op == '-') {
+          return '$base$op($base*$pct/100)';
+        } else {
+          // For × and ÷: simple percentage value
+          return '$base$op($pct/100)';
+        }
+      });
+    }
+
+    // Case 2: Standalone "10%" → "0.1"
+    final soloPercent = RegExp(r'(\d+\.?\d*)%');
+    expr = expr.replaceAllMapped(soloPercent, (m) {
+      return '(${m.group(1)}/100)';
+    });
+
+    return expr;
+  }
+
+  // ═══════ PARSER ═══════
   double _parse(String s) {
+    // Handle brackets first
+    while (s.contains('(')) {
+      final start = s.lastIndexOf('(');
+      final end = s.indexOf(')', start);
+      if (end == -1) break;
+      final inner = s.substring(start + 1, end);
+      final innerResult = _parse(inner);
+      s = s.substring(0, start) +
+          innerResult.toString() +
+          s.substring(end + 1);
+    }
+
     for (int i = s.length - 1; i > 0; i--) {
       if ((s[i] == '+' || s[i] == '-') && !'*/'.contains(s[i - 1])) {
-        return s[i] == '+'
-            ? _parse(s.substring(0, i)) + _parse(s.substring(i + 1))
-            : _parse(s.substring(0, i)) - _parse(s.substring(i + 1));
+        final left = _parse(s.substring(0, i));
+        final right = _parse(s.substring(i + 1));
+        return s[i] == '+' ? left + right : left - right;
       }
     }
     for (int i = s.length - 1; i > 0; i--) {
       if (s[i] == '*' || s[i] == '/') {
-        return s[i] == '*'
-            ? _parse(s.substring(0, i)) * _parse(s.substring(i + 1))
-            : _parse(s.substring(0, i)) / _parse(s.substring(i + 1));
+        final left = _parse(s.substring(0, i));
+        final right = _parse(s.substring(i + 1));
+        return s[i] == '*' ? left * right : left / right;
       }
     }
     return double.parse(s);
   }
 
+  // ═══════ BUTTON WIDGET ═══════
   Widget _btn(String label, {Color? bg, Color? fg}) {
     return Expanded(
       child: Padding(
@@ -211,6 +364,7 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return SafeArea(
       child: Column(
         children: [
+          // Header
           Padding(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
             child: Row(
@@ -226,32 +380,58 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                   decoration: BoxDecoration(
                     color: darkGrey,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: softRed.withValues(alpha: 0.4)),
+                    border:
+                        Border.all(color: softRed.withValues(alpha: 0.4)),
                   ),
-                  child: const Icon(Icons.history, color: softRed, size: 20),
+                  child:
+                      const Icon(Icons.history, color: softRed, size: 20),
                 ),
               ],
             ),
           ),
+
+          // ═══════ DISPLAY (with Live Preview) ═══════
           Expanded(
             flex: 2,
             child: Container(
               alignment: Alignment.bottomRight,
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 10),
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                reverse: true,
-                child: Text(
-                  _display,
-                  style: GoogleFonts.poppins(
-                    fontSize: 52,
-                    fontWeight: FontWeight.bold,
-                    color: kTextWhite,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Live Preview Line (chhota, grey)
+                  if (_preview.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        _preview,
+                        style: GoogleFonts.poppins(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          color: Colors.white.withValues(alpha: 0.5),
+                        ),
+                      ),
+                    ),
+                  // Main Expression Line
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    reverse: true,
+                    child: Text(
+                      _display,
+                      style: GoogleFonts.poppins(
+                        fontSize: 52,
+                        fontWeight: FontWeight.bold,
+                        color: kTextWhite,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),
+
+          // ═══════ KEYPAD ═══════
           Expanded(
             flex: 5,
             child: Padding(
