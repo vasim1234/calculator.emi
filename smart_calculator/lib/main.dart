@@ -123,6 +123,11 @@ class BasicCalculator extends StatefulWidget {
 class _BasicCalculatorState extends State<BasicCalculator> {
   String _display = '0';
 
+  // ✅ Soft Red (thoda dark)
+  static const Color softRed = Color(0xFFE63946);
+  static const Color darkGrey = Color(0xFF2A2A2A);
+  static const Color lightGrey = Color(0xFF3A3A3A);
+
   void _onKey(String v) {
     setState(() {
       if (v == 'C') {
@@ -172,7 +177,7 @@ class _BasicCalculatorState extends State<BasicCalculator> {
     return double.parse(s);
   }
 
-  // ✅ FIXED: All buttons same size, equal width
+  // ✅ FIXED: Clean colors, no bright/muddy issues
   Widget _btn(String label, {Color? bg, Color? fg}) {
     return Expanded(
       child: Padding(
@@ -180,7 +185,7 @@ class _BasicCalculatorState extends State<BasicCalculator> {
         child: AspectRatio(
           aspectRatio: 1.0,
           child: Material(
-            color: bg ?? kGrey,
+            color: bg ?? darkGrey,
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
@@ -221,11 +226,11 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: kCard,
+                    color: darkGrey,
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: kRed.withValues(alpha: 0.3)),
+                    border: Border.all(color: softRed.withValues(alpha: 0.4)),
                   ),
-                  child: const Icon(Icons.history, color: kRed, size: 20),
+                  child: const Icon(Icons.history, color: softRed, size: 20),
                 ),
               ],
             ),
@@ -257,40 +262,70 @@ class _BasicCalculatorState extends State<BasicCalculator> {
               padding: const EdgeInsets.all(10),
               child: Column(
                 children: [
-                  // Row 1 - Clear, Backspace, %, ÷
+                  // Row 1: C, ⌫, %, ÷
                   Row(children: [
-                    _btn('C', bg: kRedDark, fg: kTextWhite),
-                    _btn('⌫', bg: kCard2, fg: kRed),
-                    _btn('%', bg: kCard2, fg: kTextWhite),
-                    _btn('÷', bg: kRed.withValues(alpha: 0.15), fg: kRed),
+                    // C - soft red background, white text
+                    _btn('C', bg: softRed, fg: kTextWhite),
+                    // Backspace - dark grey with red icon color
+                    _btn('⌫', bg: darkGrey, fg: softRed),
+                    // % - dark grey, white text
+                    _btn('%', bg: darkGrey, fg: kTextWhite),
+                    // ÷ - dark grey with red text
+                    _btn('÷', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 2 - 7, 8, 9, ×
+                  // Row 2: 7, 8, 9, ×
                   Row(children: [
                     _btn('7'),
                     _btn('8'),
                     _btn('9'),
-                    _btn('×', bg: kRed.withValues(alpha: 0.15), fg: kRed),
+                    _btn('×', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 3 - 4, 5, 6, -
+                  // Row 3: 4, 5, 6, −
                   Row(children: [
                     _btn('4'),
                     _btn('5'),
                     _btn('6'),
-                    _btn('-', bg: kRed.withValues(alpha: 0.15), fg: kRed),
+                    _btn('-', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 4 - 1, 2, 3, +
+                  // Row 4: 1, 2, 3, +
                   Row(children: [
                     _btn('1'),
                     _btn('2'),
                     _btn('3'),
-                    _btn('+', bg: kRed.withValues(alpha: 0.15), fg: kRed),
+                    _btn('+', bg: darkGrey, fg: softRed),
                   ]),
-                  // Row 5 - 0, ., = (span 2)
+                  // ✅ Row 5: 0, ., = (SIRF EK '=' button)
                   Row(children: [
                     _btn('0'),
                     _btn('.'),
-                    _btn('=', bg: kRed, fg: kTextWhite),
-                    _btn('=', bg: kRed, fg: kTextWhite),
+                    // '=' button - double width, soft red
+                    Expanded(
+                      flex: 2,
+                      child: Padding(
+                        padding: const EdgeInsets.all(5),
+                        child: AspectRatio(
+                          aspectRatio: 2.05,
+                          child: Material(
+                            color: softRed,
+                            borderRadius: BorderRadius.circular(20),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(20),
+                              onTap: () => _onKey('='),
+                              child: Center(
+                                child: Text(
+                                  '=',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 22,
+                                    fontWeight: FontWeight.w600,
+                                    color: kTextWhite,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   ]),
                 ],
               ),
