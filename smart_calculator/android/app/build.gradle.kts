@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.smart_calculator"
+    namespace = "com.s_one.smartcalculator"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
