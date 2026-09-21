@@ -2,7 +2,7 @@ name: smart_calculator
 description: "Smart Calculator - EMI, SIP, FD, GST, BMI, Age & More"
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.0.1+2
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
