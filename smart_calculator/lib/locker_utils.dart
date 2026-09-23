@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 class LockerUtils {
   static const String _pinKey = 'locker_pin';
   static const String _notesKey = 'locker_notes';
+  static const String _securityQKey = 'locker_security_q';
+  static const String _securityAKey = 'locker_security_a';
+  static const String _biometricKey = 'locker_biometric';
 
   // ═══════ PIN MANAGEMENT ═══════
   static Future<bool> hasPin() async {
@@ -30,6 +33,58 @@ class LockerUtils {
   static Future<void> removePin() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_pinKey);
+  }
+
+  // ═══════ SECURITY QUESTION ═══════
+  static Future<bool> hasSecurityQuestion() async {
+    final prefs = await SharedPreferences.getInstance();
+    final q = prefs.getString(_securityQKey);
+    return q != null && q.isNotEmpty;
+  }
+
+  static Future<void> setSecurityQuestion(
+      String question, String answer) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_securityQKey, question);
+    await prefs.setString(_securityAKey, answer.toLowerCase().trim());
+  }
+
+  static Future<String?> getSecurityQuestion() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_securityQKey);
+  }
+
+  static Future<bool> verifySecurityAnswer(String answer) async {
+    final prefs = await SharedPreferences.getInstance();
+    final stored = prefs.getString(_securityAKey);
+    if (stored == null) return false;
+    return stored == answer.toLowerCase().trim();
+  }
+
+  // ═══════ BIOMETRIC ═══════
+  static Future<bool> isBiometricEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_biometricKey) ?? false;
+  }
+
+  static Future<void> setBiometric(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_biometricKey, enabled);
+  }
+
+  // ═══════ RESET ═══════
+  static Future<void> resetLocker() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_pinKey);
+    await prefs.remove(_notesKey);
+    await prefs.remove(_securityQKey);
+    await prefs.remove(_securityAKey);
+    await prefs.remove(_biometricKey);
+  }
+
+  static Future<void> clearNotesOnly() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_notesKey);
   }
 
   // ═══════ NOTES MANAGEMENT ═══════
