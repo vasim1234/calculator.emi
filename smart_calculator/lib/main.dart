@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
 import 'dart:convert';
 import 'dart:typed_data';
+import 'locker_screen.dart';
 
 // ═══════ COLORS ═══════
 const kBg = Color(0xFF000000);
@@ -500,6 +501,24 @@ class FinanceScreen extends StatelessWidget {
                   ),
                   child: const Icon(Icons.notifications_none,
                       color: kRed, size: 22),
+                ),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (_) => const LockerScreen()),
+                  ),
+                  child: Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: kCard,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: kRed.withValues(alpha: 0.3)),
+                    ),
+                    child: const Icon(Icons.lock_outline,
+                        color: kRed, size: 22),
+                  ),
                 ),
               ],
             ),
