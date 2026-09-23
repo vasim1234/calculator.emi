@@ -26,11 +26,12 @@ jobs:
 
       - name: Decode Keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
+          mkdir -p smart_calculator/android/app
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > smart_calculator/android/app/upload-keystore.jks
 
       - name: Create key.properties
         run: |
-          cat > android/key.properties << EOF
+          cat > smart_calculator/android/key.properties << EOF
           storePassword=${{ secrets.KEYSTORE_PASSWORD }}
           keyPassword=${{ secrets.KEY_PASSWORD }}
           keyAlias=${{ secrets.KEY_ALIAS }}
