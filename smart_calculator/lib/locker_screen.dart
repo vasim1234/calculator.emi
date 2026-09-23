@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 import 'locker_utils.dart';
 
 const kBg2 = Color(0xFF000000);
@@ -118,8 +119,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
   String _confirmPin = '';
   bool _confirming = false;
 
-  // Security Question Step
-  int _step = 0; // 0=pin, 1=confirm, 2=security, 3=biometric
+  int _step = 0;
   String? _selectedQuestion;
   final _answerCtrl = TextEditingController();
 
@@ -149,7 +149,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
 
   void _verifyPin() {
     if (_pin == _confirmPin) {
-      setState(() => _step = 2); // Go to security question
+      setState(() => _step = 2);
     } else {
       setState(() {
         _pin = '';
@@ -191,7 +191,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     await LockerUtils.setPin(_pin);
     await LockerUtils.setSecurityQuestion(
         _selectedQuestion!, _answerCtrl.text.trim());
-    setState(() => _step = 3); // Biometric step
+    setState(() => _step = 3);
   }
 
   Future<void> _finish(bool enableBio) async {
@@ -212,7 +212,6 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     return _buildBiometricScreen();
   }
 
-  // ═══════ PIN SCREEN ═══════
   Widget _buildPinScreen() {
     final current = _confirming ? _confirmPin : _pin;
     return Scaffold(
@@ -256,7 +255,6 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     );
   }
 
-  // ═══════ SECURITY QUESTION SCREEN ═══════
   Widget _buildSecurityScreen() {
     return Scaffold(
       backgroundColor: kBg2,
@@ -363,7 +361,6 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
     );
   }
 
-  // ═══════ BIOMETRIC SCREEN ═══════
   Widget _buildBiometricScreen() {
     return Scaffold(
       backgroundColor: kBg2,
@@ -464,6 +461,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
+                    SystemSound.play(SystemSoundType.click);
                     if (k == '⌫') {
                       _backspace();
                     } else {
@@ -848,6 +846,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
                 child: InkWell(
                   borderRadius: BorderRadius.circular(20),
                   onTap: () {
+                    SystemSound.play(SystemSoundType.click);
                     if (k == '⌫') {
                       _backspace();
                     } else {
