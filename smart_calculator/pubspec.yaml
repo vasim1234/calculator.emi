@@ -1,37 +1,53 @@
-name: smart_calculator
-description: "Smart Calculator - EMI, SIP, FD, GST, BMI, Age & More"
-publish_to: 'none'
+name: Build APK
 
-version: 1.0.1+4
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
 
-environment:
-  sdk: '>=3.5.0 <4.0.0'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-dependencies:
-  flutter:
-    sdk: flutter
-  cupertino_icons: ^1.0.8
-  google_fonts: ^6.2.1
-  pdf: ^3.11.1
-  printing: ^5.13.1
-  path_provider: ^2.1.4
-  http: ^1.2.2
-  shared_preferences: ^2.3.2
-  local_auth: ^2.3.0
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
 
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^5.0.0
-  flutter_launcher_icons: ^0.13.1
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
 
-flutter:
-  uses-material-design: true
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/upload-keystore.jks
 
-flutter_launcher_icons:
-  android: "launcher_icon"
-  ios: true
-  image_path: "assets/icon/app_icon.png"
-  min_sdk_android: 21
-  adaptive_icon_background: "#0A0A0A"
-  adaptive_icon_foreground: "assets/icon/app_icon.png"
+      - name: Create key.properties
+        run: |
+          cat > android/key.properties << EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=upload-keystore.jks
+          EOF
+
+      - name: Install dependencies
+        run: |
+          cd smart_calculator
+          flutter pub get
+
+      - name: Build APK
+        run: |
+          cd smart_calculator
+          flutter build apk --release
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: smart-calculator-apk
+          path: smart_calculator/build/app/outputs/flutter-apk/app-release.apk
