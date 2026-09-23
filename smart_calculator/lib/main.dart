@@ -9,6 +9,7 @@ import 'dart:math';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'locker_screen.dart';
+import 'package:flutter/services.dart';
 
 // ═══════ COLORS ═══════
 const kBg = Color(0xFF000000);
@@ -312,7 +313,10 @@ class _BasicCalculatorState extends State<BasicCalculator> {
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-              onTap: () => _onKey(label),
+             onTap: () {
+  SystemSound.play(SystemSoundType.click);
+  _onKey(label);
+},
               child: Center(
                 child: Text(
                   label,
@@ -438,7 +442,10 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                             borderRadius: BorderRadius.circular(20),
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
-                              onTap: () => _onKey('='),
+                              onTap: () {
+  SystemSound.play(SystemSoundType.click);
+  _onKey('=');
+},
                               child: Center(
                                 child: Text(
                                   '=',
