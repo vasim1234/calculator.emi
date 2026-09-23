@@ -2,7 +2,7 @@ name: smart_calculator
 description: "Smart Calculator - EMI, SIP, FD, GST, BMI, Age & More"
 publish_to: 'none'
 
-version: 1.0.1+2
+version: 1.0.1+3
 
 environment:
   sdk: '>=3.5.0 <4.0.0'
@@ -17,6 +17,7 @@ dependencies:
   path_provider: ^2.1.4
   http: ^1.2.2
   shared_preferences: ^2.3.2
+  local_auth: ^2.3.0
 
 dev_dependencies:
   flutter_test:
