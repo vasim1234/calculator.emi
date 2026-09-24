@@ -20,7 +20,6 @@ dependencies:
   local_auth: ^2.3.0
   image_picker: ^1.1.2
   image: ^4.2.0
-  media_store_plus: ^0.5.4
 
 dev_dependencies:
   flutter_test:
