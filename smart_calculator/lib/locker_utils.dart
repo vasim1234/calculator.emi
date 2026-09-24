@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 
 class LockerUtils {
   static const String _pinKey = 'locker_pin';
@@ -170,31 +171,37 @@ class LockerUtils {
     }
   }
 
-  // ✅ SIMPLE: Copy + Delete (move) — Android 10 tak kaam karega
   static Future<String?> hidePhoto(String sourcePath) async {
+  try {
+    final dir = await getPhotosDir();
+    final fileName =
+        '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
+    final destPath = '${dir.path}/$fileName';
+
+    // Step 1: Copy to app private folder
+    await File(sourcePath).copy(destPath);
+
+    // Step 2: Delete using MediaStore (works Android 10+)
     try {
-      final dir = await getPhotosDir();
-      final fileName =
-          '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
-      final destPath = '${dir.path}/$fileName';
-
-      // Step 1: Copy to app private folder
-      await File(sourcePath).copy(destPath);
-
-      // Step 2: Try to delete original (Android 10 tak kaam karega)
+      final mediaStore = MediaStore();
+      await mediaStore.ensureInitialized();
+      await mediaStore.deleteFile(sourcePath);
+    } catch (e) {
+      // Fallback: direct delete
       try {
         final original = File(sourcePath);
         if (await original.exists()) {
           await original.delete();
         }
-      } catch (e) {
-        // Silent fail — Android 11+ mein fail ho sakta hai
+      } catch (e2) {
+        // Silent fail
       }
-
-      return destPath;
-    } catch (e) {
-      return null;
     }
+
+    return destPath;
+  } catch (e) {
+    return null;
+  }
   }
 
   static Future<void> deletePhoto(String path) async {
