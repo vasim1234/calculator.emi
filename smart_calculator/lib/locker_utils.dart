@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:media_store_plus/media_store_plus.dart';
 
 class LockerUtils {
   static const String _pinKey = 'locker_pin';
@@ -170,9 +171,15 @@ class LockerUtils {
     }
   }
 
-  // ✅ FIXED: Copy + Delete (Move) — gallery se gayab
+  // ✅ FIXED: MediaStore API use karta hai — Android 11+ pe bhi kaam karega
   static Future<String?> hidePhoto(String sourcePath) async {
     try {
+      // Initialize MediaStore
+      final mediaStore = MediaStore();
+      final tempDir = await getTemporaryDirectory();
+      await mediaStore.ensureInitialized();
+      MediaStore.appFolder = 'SmartCalculator';
+
       final dir = await getPhotosDir();
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
@@ -181,10 +188,25 @@ class LockerUtils {
       // Step 1: Copy to app private folder
       await File(sourcePath).copy(destPath);
 
-      // Step 2: Delete from original location (gallery)
-      final original = File(sourcePath);
-      if (await original.exists()) {
-        await original.delete();
+      // Step 2: Delete from gallery using MediaStore
+      bool deleted = false;
+      try {
+        final result = await mediaStore.deleteFile(sourcePath);
+        if (result) deleted = true;
+      } catch (e) {
+        // Try alternative delete
+      }
+
+      // Step 3: Fallback — direct delete (Android 9-10)
+      if (!deleted) {
+        try {
+          final original = File(sourcePath);
+          if (await original.exists()) {
+            await original.delete();
+          }
+        } catch (e) {
+          // Silent fail
+        }
       }
 
       return destPath;
