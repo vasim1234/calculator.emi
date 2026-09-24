@@ -3,6 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 import 'locker_utils.dart';
+import 'photo_locker_screen.dart';
 
 const kBg2 = Color(0xFF000000);
 const kCardL = Color(0xFF1A1A1A);
@@ -102,7 +103,39 @@ class _LockerScreenState extends State<LockerScreen> {
       );
     }
 
-    return const NotesListScreen();
+    return DefaultTabController(
+  length: 2,
+  child: Scaffold(
+    backgroundColor: kBg2,
+    appBar: AppBar(
+      backgroundColor: kBg2,
+      title: Text('Private Locker',
+          style: GoogleFonts.poppins(color: kTextWhiteL)),
+      iconTheme: const IconThemeData(color: kTextWhiteL),
+      bottom: TabBar(
+        indicatorColor: kRedL,
+        labelColor: kRedL,
+        unselectedLabelColor: kTextGreyL,
+        tabs: const [
+          Tab(
+            icon: Icon(Icons.note),
+            text: 'Notes',
+          ),
+          Tab(
+            icon: Icon(Icons.photo),
+            text: 'Photos',
+          ),
+        ],
+      ),
+    ),
+    body: const TabBarView(
+      children: [
+        NotesListScreen(),
+        PhotoLockerScreen(),
+      ],
+    ),
+  ),
+);
   }
 }
 
