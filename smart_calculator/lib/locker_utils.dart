@@ -170,13 +170,23 @@ class LockerUtils {
     }
   }
 
+  // ✅ FIXED: Copy + Delete (Move) — gallery se gayab
   static Future<String?> hidePhoto(String sourcePath) async {
     try {
       final dir = await getPhotosDir();
       final fileName =
           '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
       final destPath = '${dir.path}/$fileName';
+
+      // Step 1: Copy to app private folder
       await File(sourcePath).copy(destPath);
+
+      // Step 2: Delete from original location (gallery)
+      final original = File(sourcePath);
+      if (await original.exists()) {
+        await original.delete();
+      }
+
       return destPath;
     } catch (e) {
       return null;
