@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
 
 class LockerUtils {
   static const String _pinKey = 'locker_pin';
@@ -134,5 +136,60 @@ class LockerUtils {
     if (index < 0 || index >= notes.length) return;
     notes.removeAt(index);
     await saveNotes(notes);
+  }
+}
+// ═══════ PHOTO MANAGEMENT ═══════
+static Future<Directory> getPhotosDir() async {
+  final appDir = await getApplicationDocumentsDirectory();
+  final hiddenDir = Directory('${appDir.path}/hidden_photos');
+  if (!await hiddenDir.exists()) {
+    await hiddenDir.create(recursive: true);
+  }
+  return hiddenDir;
+}
+
+static Future<List<Map<String, String>>> getPhotos() async {
+  try {
+    final dir = await getPhotosDir();
+    final files = await dir.list().toList();
+    final photos = <Map<String, String>>[];
+    for (final f in files) {
+      if (f is File) {
+        final stat = await f.stat();
+        photos.add({
+          'path': f.path,
+          'name': f.path.split('/').last,
+          'date': stat.modified.toIso8601String(),
+        });
+      }
+    }
+    photos.sort((a, b) => b['date']!.compareTo(a['date']!));
+    return photos;
+  } catch (e) {
+    return [];
+  }
+}
+
+static Future<String?> hidePhoto(String sourcePath) async {
+  try {
+    final dir = await getPhotosDir();
+    final fileName =
+        '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
+    final destPath = '${dir.path}/$fileName';
+    await File(sourcePath).copy(destPath);
+    return destPath;
+  } catch (e) {
+    return null;
+  }
+}
+
+static Future<void> deletePhoto(String path) async {
+  try {
+    final file = File(path);
+    if (await file.exists()) {
+      await file.delete();
+    }
+  } catch (e) {
+    // silent
   }
 }
