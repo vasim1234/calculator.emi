@@ -897,81 +897,163 @@ class _NotesListScreenState extends State<NotesListScreen> {
   }
 
   Future<void> _addOrEdit({int? index}) async {
-    final isEdit = index != null;
-    final titleCtrl = TextEditingController(
-        text: isEdit ? _notes[index]['title'] : '');
-    final contentCtrl = TextEditingController(
-        text: isEdit ? _notes[index]['content'] : '');
+  final isEdit = index != null;
+  final titleCtrl = TextEditingController(
+      text: isEdit ? _notes[index]['title'] : '');
+  final contentCtrl = TextEditingController(
+      text: isEdit ? _notes[index]['content'] : '');
 
-    final result = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: kCardL,
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text(isEdit ? 'Edit Note' : 'New Note',
-            style: GoogleFonts.poppins(
-                color: kTextWhiteL, fontWeight: FontWeight.bold)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: titleCtrl,
-              style: GoogleFonts.poppins(color: kTextWhiteL),
-              decoration: InputDecoration(
-                hintText: 'Title',
-                hintStyle: GoogleFonts.poppins(color: kTextGreyL),
-                filled: true,
-                fillColor: kCard2L,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: contentCtrl,
-              maxLines: 5,
-              style: GoogleFonts.poppins(color: kTextWhiteL),
-              decoration: InputDecoration(
-                hintText: 'Note...',
-                hintStyle: GoogleFonts.poppins(color: kTextGreyL),
-                filled: true,
-                fillColor: kCard2L,
-                border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none),
-              ),
-            ),
-          ],
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: kCardL,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: kRedL.withValues(alpha: 0.3), width: 1),
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, false),
-            child: Text('Cancel',
-                style: GoogleFonts.poppins(color: kTextGreyL)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: kRedL),
-            onPressed: () => Navigator.pop(ctx, true),
-            child: Text('Save',
-                style: GoogleFonts.poppins(color: kTextWhiteL)),
-          ),
-        ],
-      ),
-    );
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: kRedL.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isEdit ? Icons.edit : Icons.note_add,
+                      color: kRedL,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    isEdit ? 'Edit Note' : 'New Note',
+                    style: GoogleFonts.poppins(
+                      color: kTextWhiteL,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 24),
 
-    if (result == true) {
-      final title = titleCtrl.text.trim();
-      final content = contentCtrl.text.trim();
-      if (title.isEmpty && content.isEmpty) return;
-      if (isEdit) {
-        await LockerUtils.updateNote(index, title, content);
-      } else {
-        await LockerUtils.addNote(title, content);
-      }
-      _load();
+              // Title Field
+              Text('Title',
+                  style: GoogleFonts.poppins(
+                      fontSize: 13, color: kTextGreyL)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: titleCtrl,
+                style: GoogleFonts.poppins(
+                    color: kTextWhiteL, fontSize: 16),
+                decoration: InputDecoration(
+                  hintText: 'Enter title...',
+                  hintStyle: GoogleFonts.poppins(
+                      color: kTextGreyL, fontSize: 15),
+                  filled: true,
+                  fillColor: kCard2L,
+                  contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 18, vertical: 18),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 20),
+
+              // Content Field
+              Text('Note',
+                  style: GoogleFonts.poppins(
+                      fontSize: 13, color: kTextGreyL)),
+              const SizedBox(height: 8),
+              TextField(
+                controller: contentCtrl,
+                maxLines: 10,
+                minLines: 6,
+                style: GoogleFonts.poppins(
+                    color: kTextWhiteL, fontSize: 15, height: 1.5),
+                decoration: InputDecoration(
+                  hintText: 'Write your note here...',
+                  hintStyle: GoogleFonts.poppins(
+                      color: kTextGreyL, fontSize: 15),
+                  filled: true,
+                  fillColor: kCard2L,
+                  contentPadding: const EdgeInsets.all(18),
+                  border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(14),
+                      borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 24),
+
+              // Buttons
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(ctx, false),
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        side: BorderSide(color: kTextGreyL.withValues(alpha: 0.5)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                      ),
+                      child: Text('Cancel',
+                          style: GoogleFonts.poppins(
+                              color: kTextGreyL,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () => Navigator.pop(ctx, true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: kRedL,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
+                        elevation: 0,
+                      ),
+                      child: Text('Save',
+                          style: GoogleFonts.poppins(
+                              color: kTextWhiteL,
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+
+  if (result == true) {
+    final title = titleCtrl.text.trim();
+    final content = contentCtrl.text.trim();
+    if (title.isEmpty && content.isEmpty) return;
+    if (isEdit) {
+      await LockerUtils.updateNote(index, title, content);
+    } else {
+      await LockerUtils.addNote(title, content);
     }
+    _load();
+  }
   }
 
   Future<void> _delete(int index) async {
