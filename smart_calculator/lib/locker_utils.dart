@@ -170,37 +170,31 @@ class LockerUtils {
     }
   }
 
+  // ✅ Simple copy + delete (no MediaStore)
   static Future<String?> hidePhoto(String sourcePath) async {
-  try {
-    final dir = await getPhotosDir();
-    final fileName =
-        '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
-    final destPath = '${dir.path}/$fileName';
-
-    // Step 1: Copy to app private folder
-    await File(sourcePath).copy(destPath);
-
-    // Step 2: Delete using MediaStore (works Android 10+)
     try {
-      final mediaStore = MediaStore();
-      await mediaStore.ensureInitialized();
-      await mediaStore.deleteFile(sourcePath);
-    } catch (e) {
-      // Fallback: direct delete
+      final dir = await getPhotosDir();
+      final fileName =
+          '${DateTime.now().millisecondsSinceEpoch}_${sourcePath.split('/').last}';
+      final destPath = '${dir.path}/$fileName';
+
+      // Step 1: Copy to app private folder
+      await File(sourcePath).copy(destPath);
+
+      // Step 2: Delete original (Android 10 tak kaam karega)
       try {
         final original = File(sourcePath);
         if (await original.exists()) {
           await original.delete();
         }
-      } catch (e2) {
-        // Silent fail
+      } catch (e) {
+        // Silent fail — Android 11+ mein fail ho sakta hai
       }
-    }
 
-    return destPath;
-  } catch (e) {
-    return null;
-  }
+      return destPath;
+    } catch (e) {
+      return null;
+    }
   }
 
   static Future<void> deletePhoto(String path) async {
