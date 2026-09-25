@@ -3797,17 +3797,19 @@ String _pdfDate() {
 String formatIndianNumber(dynamic number) {
   if (number == null) return '0';
 
-  double num;
+  double value;
   if (number is String) {
-    num = double.tryParse(number) ?? 0;
+    value = double.tryParse(number) ?? 0;
+  } else if (number is num) {
+    value = number.toDouble();
   } else {
-    num = (number as num).toDouble();
+    value = 0;
   }
 
-  bool hasDecimal = num % 1 != 0;
+  bool hasDecimal = value % 1 != 0;
   String numStr = hasDecimal
-      ? num.toStringAsFixed(2)
-      : num.toInt().toString();
+      ? value.toStringAsFixed(2)
+      : value.toInt().toString();
 
   String intPart = numStr.split('.').first;
   String decimalPart =
