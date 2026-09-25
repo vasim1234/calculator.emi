@@ -3,7 +3,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 import 'locker_utils.dart';
-import 'photo_locker_screen.dart';
 
 const kBg2 = Color(0xFF000000);
 const kCardL = Color(0xFF1A1A1A);
@@ -104,38 +103,107 @@ class _LockerScreenState extends State<LockerScreen> {
     }
 
     return DefaultTabController(
-  length: 2,
-  child: Scaffold(
-    backgroundColor: kBg2,
-    appBar: AppBar(
-      backgroundColor: kBg2,
-      title: Text('Private Locker',
-          style: GoogleFonts.poppins(color: kTextWhiteL)),
-      iconTheme: const IconThemeData(color: kTextWhiteL),
-      bottom: TabBar(
-        indicatorColor: kRedL,
-        labelColor: kRedL,
-        unselectedLabelColor: kTextGreyL,
-        tabs: const [
-          Tab(
-            icon: Icon(Icons.note),
-            text: 'Notes',
+      length: 2,
+      child: Scaffold(
+        backgroundColor: kBg2,
+        appBar: AppBar(
+          backgroundColor: kBg2,
+          title: Text('Private Locker',
+              style: GoogleFonts.poppins(color: kTextWhiteL)),
+          iconTheme: const IconThemeData(color: kTextWhiteL),
+          bottom: TabBar(
+            indicatorColor: kRedL,
+            labelColor: kRedL,
+            unselectedLabelColor: kTextGreyL,
+            tabs: const [
+              Tab(
+                icon: Icon(Icons.note),
+                text: 'Notes',
+              ),
+              Tab(
+                icon: Icon(Icons.photo),
+                text: 'Photos',
+              ),
+            ],
           ),
-          Tab(
-            icon: Icon(Icons.photo),
-            text: 'Photos',
+        ),
+        body: const TabBarView(
+          children: [
+            NotesListScreen(),
+            _ComingSoonScreen(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ═══════ COMING SOON SCREEN ═══════
+class _ComingSoonScreen extends StatelessWidget {
+  const _ComingSoonScreen();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(30),
+            decoration: BoxDecoration(
+              color: kCardL,
+              shape: BoxShape.circle,
+              border: Border.all(
+                  color: kRedL.withValues(alpha: 0.3), width: 2),
+            ),
+            child: const Icon(
+              Icons.photo_library_outlined,
+              size: 60,
+              color: kRedL,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Photo Locker',
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: kTextWhiteL,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 40),
+            child: Text(
+              'Yeh feature jald hi aayega!\n\nHum is par kaam kar rahe hain.',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                color: kTextGreyL,
+                height: 1.6,
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+            decoration: BoxDecoration(
+              color: kRedL.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: kRedL.withValues(alpha: 0.3)),
+            ),
+            child: Text(
+              '🚀 Coming Soon',
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: kRedL,
+              ),
+            ),
           ),
         ],
       ),
-    ),
-    body: const TabBarView(
-      children: [
-        NotesListScreen(),
-        PhotoLockerScreen(),
-      ],
-    ),
-  ),
-);
+    );
   }
 }
 
@@ -303,7 +371,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 20),
-            Icon(Icons.security, color: kRedL, size: 60),
+            const Icon(Icons.security, color: kRedL, size: 60),
             const SizedBox(height: 20),
             Text('Security Question',
                 style: GoogleFonts.poppins(
@@ -408,7 +476,7 @@ class _PinSetupScreenState extends State<PinSetupScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.fingerprint, color: kRedL, size: 100),
+            const Icon(Icons.fingerprint, color: kRedL, size: 100),
             const SizedBox(height: 30),
             Text('Enable Biometric?',
                 style: GoogleFonts.poppins(
@@ -811,7 +879,7 @@ class _PinEntryScreenState extends State<PinEntryScreen> {
       body: Column(
         children: [
           const SizedBox(height: 40),
-          Icon(Icons.lock, color: kRedL, size: 60),
+          const Icon(Icons.lock, color: kRedL, size: 60),
           const SizedBox(height: 20),
           Text('Enter your 4-digit PIN',
               style:
@@ -930,163 +998,164 @@ class _NotesListScreenState extends State<NotesListScreen> {
   }
 
   Future<void> _addOrEdit({int? index}) async {
-  final isEdit = index != null;
-  final titleCtrl = TextEditingController(
-      text: isEdit ? _notes[index]['title'] : '');
-  final contentCtrl = TextEditingController(
-      text: isEdit ? _notes[index]['content'] : '');
+    final isEdit = index != null;
+    final titleCtrl = TextEditingController(
+        text: isEdit ? _notes[index]['title'] : '');
+    final contentCtrl = TextEditingController(
+        text: isEdit ? _notes[index]['content'] : '');
 
-  final result = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => Dialog(
-      backgroundColor: Colors.transparent,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: kCardL,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: kRedL.withValues(alpha: 0.3), width: 1),
-        ),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: kRedL.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(12),
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        child: Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: kCardL,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: kRedL.withValues(alpha: 0.3), width: 1),
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: kRedL.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        isEdit ? Icons.edit : Icons.note_add,
+                        color: kRedL,
+                        size: 22,
+                      ),
                     ),
-                    child: Icon(
-                      isEdit ? Icons.edit : Icons.note_add,
-                      color: kRedL,
-                      size: 22,
+                    const SizedBox(width: 12),
+                    Text(
+                      isEdit ? 'Edit Note' : 'New Note',
+                      style: GoogleFonts.poppins(
+                        color: kTextWhiteL,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    isEdit ? 'Edit Note' : 'New Note',
+                  ],
+                ),
+                const SizedBox(height: 24),
+
+                // Title Field
+                Text('Title',
                     style: GoogleFonts.poppins(
-                      color: kTextWhiteL,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-
-              // Title Field
-              Text('Title',
+                        fontSize: 13, color: kTextGreyL)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: titleCtrl,
                   style: GoogleFonts.poppins(
-                      fontSize: 13, color: kTextGreyL)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: titleCtrl,
-                style: GoogleFonts.poppins(
-                    color: kTextWhiteL, fontSize: 16),
-                decoration: InputDecoration(
-                  hintText: 'Enter title...',
-                  hintStyle: GoogleFonts.poppins(
-                      color: kTextGreyL, fontSize: 15),
-                  filled: true,
-                  fillColor: kCard2L,
-                  contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 18, vertical: 18),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none),
+                      color: kTextWhiteL, fontSize: 16),
+                  decoration: InputDecoration(
+                    hintText: 'Enter title...',
+                    hintStyle: GoogleFonts.poppins(
+                        color: kTextGreyL, fontSize: 15),
+                    filled: true,
+                    fillColor: kCard2L,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 18, vertical: 18),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 20),
 
-              // Content Field
-              Text('Note',
+                // Content Field
+                Text('Note',
+                    style: GoogleFonts.poppins(
+                        fontSize: 13, color: kTextGreyL)),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: contentCtrl,
+                  maxLines: 10,
+                  minLines: 6,
                   style: GoogleFonts.poppins(
-                      fontSize: 13, color: kTextGreyL)),
-              const SizedBox(height: 8),
-              TextField(
-                controller: contentCtrl,
-                maxLines: 10,
-                minLines: 6,
-                style: GoogleFonts.poppins(
-                    color: kTextWhiteL, fontSize: 15, height: 1.5),
-                decoration: InputDecoration(
-                  hintText: 'Write your note here...',
-                  hintStyle: GoogleFonts.poppins(
-                      color: kTextGreyL, fontSize: 15),
-                  filled: true,
-                  fillColor: kCard2L,
-                  contentPadding: const EdgeInsets.all(18),
-                  border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(14),
-                      borderSide: BorderSide.none),
+                      color: kTextWhiteL, fontSize: 15, height: 1.5),
+                  decoration: InputDecoration(
+                    hintText: 'Write your note here...',
+                    hintStyle: GoogleFonts.poppins(
+                        color: kTextGreyL, fontSize: 15),
+                    filled: true,
+                    fillColor: kCard2L,
+                    contentPadding: const EdgeInsets.all(18),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(14),
+                        borderSide: BorderSide.none),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
 
-              // Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton(
-                      onPressed: () => Navigator.pop(ctx, false),
-                      style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        side: BorderSide(color: kTextGreyL.withValues(alpha: 0.5)),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
+                // Buttons
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(ctx, false),
+                        style: OutlinedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          side: BorderSide(
+                              color: kTextGreyL.withValues(alpha: 0.5)),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                        ),
+                        child: Text('Cancel',
+                            style: GoogleFonts.poppins(
+                                color: kTextGreyL,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600)),
                       ),
-                      child: Text('Cancel',
-                          style: GoogleFonts.poppins(
-                              color: kTextGreyL,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600)),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () => Navigator.pop(ctx, true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: kRedL,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(14)),
-                        elevation: 0,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.pop(ctx, true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: kRedL,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14)),
+                          elevation: 0,
+                        ),
+                        child: Text('Save',
+                            style: GoogleFonts.poppins(
+                                color: kTextWhiteL,
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600)),
                       ),
-                      child: Text('Save',
-                          style: GoogleFonts.poppins(
-                              color: kTextWhiteL,
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600)),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
-    ),
-  );
+    );
 
-  if (result == true) {
-    final title = titleCtrl.text.trim();
-    final content = contentCtrl.text.trim();
-    if (title.isEmpty && content.isEmpty) return;
-    if (isEdit) {
-      await LockerUtils.updateNote(index, title, content);
-    } else {
-      await LockerUtils.addNote(title, content);
+    if (result == true) {
+      final title = titleCtrl.text.trim();
+      final content = contentCtrl.text.trim();
+      if (title.isEmpty && content.isEmpty) return;
+      if (isEdit) {
+        await LockerUtils.updateNote(index, title, content);
+      } else {
+        await LockerUtils.addNote(title, content);
+      }
+      _load();
     }
-    _load();
-  }
   }
 
   Future<void> _delete(int index) async {
@@ -1141,7 +1210,8 @@ class _NotesListScreenState extends State<NotesListScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.lock_outline, size: 80, color: kCard2L),
+                      const Icon(Icons.lock_outline,
+                          size: 80, color: kCard2L),
                       const SizedBox(height: 16),
                       Text('Koi notes nahi',
                           style: GoogleFonts.poppins(
