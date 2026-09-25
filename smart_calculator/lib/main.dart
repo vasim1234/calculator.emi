@@ -10,6 +10,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'locker_screen.dart';
 import 'package:flutter/services.dart';
+import 'package:fl_chart/fl_chart.dart';
 
 // ═══════ COLORS ═══════
 const kBg = Color(0xFF000000);
@@ -313,10 +314,10 @@ class _BasicCalculatorState extends State<BasicCalculator> {
             borderRadius: BorderRadius.circular(20),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
-             onTap: () {
-  SystemSound.play(SystemSoundType.click);
-  _onKey(label);
-},
+              onTap: () {
+                SystemSound.play(SystemSoundType.click);
+                _onKey(label);
+              },
               child: Center(
                 child: Text(
                   label,
@@ -443,9 +444,9 @@ class _BasicCalculatorState extends State<BasicCalculator> {
                             child: InkWell(
                               borderRadius: BorderRadius.circular(20),
                               onTap: () {
-  SystemSound.play(SystemSoundType.click);
-  _onKey('=');
-},
+                                SystemSound.play(SystemSoundType.click);
+                                _onKey('=');
+                              },
                               child: Center(
                                 child: Text(
                                   '=',
@@ -1464,7 +1465,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   }
 }
 
-// ═══════ EMI ═══════
+// ═══════ EMI (with Pie Chart) ═══════
 class EmiCalculator extends StatefulWidget {
   const EmiCalculator({super.key});
   @override
@@ -1646,6 +1647,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
 
   @override
   Widget build(BuildContext context) {
+    final principal = double.tryParse(_p.text) ?? 0;
     return Scaffold(
       backgroundColor: kBg,
       appBar: AppBar(
@@ -1751,6 +1753,62 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                 ),
               ),
             ),
+
+            // ═══ EMI PIE CHART ═══
+            if (_emi > 0) ...[
+              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: kCard,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: kRed.withValues(alpha: 0.2)),
+                ),
+                child: Column(
+                  children: [
+                    Text('Payment Breakdown',
+                        style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: kTextWhite)),
+                    const SizedBox(height: 20),
+                    SizedBox(
+                      height: 180,
+                      child: PieChart(
+                        PieChartData(
+                          sectionsSpace: 3,
+                          centerSpaceRadius: 45,
+                          sections: [
+                            PieChartSectionData(
+                              value: principal,
+                              color: kRed,
+                              title: '',
+                              radius: 55,
+                            ),
+                            PieChartSectionData(
+                              value: _interest,
+                              color: const Color(0xFFFFA500),
+                              title: '',
+                              radius: 55,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _legendItem('Principal', kRed, principal),
+                        _legendItem('Interest', const Color(0xFFFFA500),
+                            _interest),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+
             const SizedBox(height: 16),
             SizedBox(
               height: 55,
@@ -1819,6 +1877,35 @@ class _EmiCalculatorState extends State<EmiCalculator> {
     );
   }
 
+  Widget _legendItem(String label, Color color, double value) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(label,
+                style: GoogleFonts.poppins(
+                    fontSize: 11, color: kTextGrey)),
+            Text('Rs. ${value.toStringAsFixed(0)}',
+                style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                    color: kTextWhite)),
+          ],
+        ),
+      ],
+    );
+  }
+
   Widget _inputField(String label, TextEditingController c) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
@@ -1850,7 +1937,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
   }
 }
 
-// ═══════ SIP ═══════
+// ═══════ SIP (with Graph) ═══════
 class SipCalculator extends StatefulWidget {
   const SipCalculator({super.key});
   @override
@@ -2080,6 +2167,127 @@ class _SipCalculatorState extends State<SipCalculator> {
               ),
             ),
           ),
+
+          // ═══ SIP GROWTH GRAPH ═══
+          if (_schedule.isNotEmpty) ...[
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: kRed.withValues(alpha: 0.2)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Year-wise Growth',
+                      style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: kTextWhite)),
+                  const SizedBox(height: 20),
+                  SizedBox(
+                    height: 200,
+                    child: LineChart(
+                      LineChartData(
+                        gridData: FlGridData(
+                          show: true,
+                          drawVerticalLine: false,
+                          horizontalInterval: _mat / 4,
+                          getDrawingHorizontalLine: (value) => FlLine(
+                            color: kTextGrey.withValues(alpha: 0.2),
+                            strokeWidth: 1,
+                          ),
+                        ),
+                        titlesData: FlTitlesData(
+                          leftTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 40,
+                              getTitlesWidget: (value, meta) {
+                                if (value == 0) return const SizedBox();
+                                return Text(
+                                  '${(value / 100000).toStringAsFixed(0)}L',
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 9, color: kTextGrey),
+                                );
+                              },
+                            ),
+                          ),
+                          rightTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          topTitles: const AxisTitles(
+                            sideTitles: SideTitles(showTitles: false),
+                          ),
+                          bottomTitles: AxisTitles(
+                            sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 30,
+                              interval: 1,
+                              getTitlesWidget: (value, meta) {
+                                return Text(
+                                  'Y${value.toInt()}',
+                                  style: GoogleFonts.poppins(
+                                      fontSize: 9, color: kTextGrey),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        borderData: FlBorderData(show: false),
+                        lineBarsData: [
+                          // Invested Line
+                          LineChartBarData(
+                            spots: _schedule.asMap().entries.map((e) {
+                              return FlSpot(
+                                  (e.key + 1).toDouble(),
+                                  (e.value['invested'] as double));
+                            }).toList(),
+                            isCurved: true,
+                            color: const Color(0xFF00D09C),
+                            barWidth: 3,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: const Color(0xFF00D09C)
+                                  .withValues(alpha: 0.15),
+                            ),
+                          ),
+                          // Value Line
+                          LineChartBarData(
+                            spots: _schedule.asMap().entries.map((e) {
+                              return FlSpot(
+                                  (e.key + 1).toDouble(),
+                                  (e.value['value'] as double));
+                            }).toList(),
+                            isCurved: true,
+                            color: kRed,
+                            barWidth: 3,
+                            dotData: const FlDotData(show: false),
+                            belowBarData: BarAreaData(
+                              show: true,
+                              color: kRed.withValues(alpha: 0.15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      _legendItem('Invested', const Color(0xFF00D09C)),
+                      _legendItem('Value', kRed),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+
           const SizedBox(height: 12),
           SizedBox(
             height: 50,
@@ -2100,6 +2308,25 @@ class _SipCalculatorState extends State<SipCalculator> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _legendItem(String label, Color color) {
+    return Row(
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(label,
+            style: GoogleFonts.poppins(
+                fontSize: 12, color: kTextWhite)),
+      ],
     );
   }
 }
