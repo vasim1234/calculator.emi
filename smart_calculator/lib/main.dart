@@ -793,6 +793,7 @@ class ToolsScreen extends StatelessWidget {
   }
 }
 
+
 // ═══════ CURRENCY ═══════
 class CurrencyScreen extends StatefulWidget {
   const CurrencyScreen({super.key});
@@ -868,7 +869,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       return;
     }
 
-    // LAYER 1: Cache
     final cached = await _getCachedRate(_from, _to);
     if (cached != null) {
       setState(() {
@@ -881,7 +881,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       return;
     }
 
-    // LAYER 2: Frankfurter API
     final apiRate = await _fetchFrankfurter();
     if (apiRate > 0) {
       final now = DateTime.now();
@@ -896,7 +895,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       return;
     }
 
-    // LAYER 3: Local fallback
     final fallbackRate = _getFallbackRate(_from, _to);
     if (fallbackRate > 0) {
       setState(() {
@@ -976,9 +974,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
           }
         }
       }
-    } catch (e) {
-      // silent
-    }
+    } catch (e) {}
   }
 
   Future<void> _clearTodayCache() async {
@@ -987,9 +983,7 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
       final key = _cacheKey(_from, _to);
       await prefs.remove(key);
       await prefs.remove('${key}_ts');
-    } catch (e) {
-      // silent
-    }
+    } catch (e) {}
   }
 
   String _formatDate(DateTime d) {
@@ -1007,44 +1001,20 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
         final rate = (data['rate'] as num?)?.toDouble() ?? 0;
         if (rate > 0) return rate;
       }
-    } catch (e) {
-      // silent
-    }
+    } catch (e) {}
     return 0;
   }
 
   double _getFallbackRate(String from, String to) {
     final usdRates = {
-      'USD': 1.0,
-      'INR': 95.0,
-      'EUR': 0.92,
-      'GBP': 0.79,
-      'JPY': 149.5,
-      'AUD': 1.52,
-      'CAD': 1.36,
-      'CHF': 0.88,
-      'CNY': 7.24,
-      'AED': 3.67,
-      'SAR': 3.75,
-      'SGD': 1.34,
-      'HKD': 7.82,
-      'NZD': 1.64,
-      'KRW': 1330.0,
-      'THB': 36.5,
-      'MYR': 4.47,
-      'IDR': 15800.0,
-      'PHP': 56.5,
-      'PKR': 278.0,
-      'BDT': 110.0,
-      'LKR': 305.0,
-      'NPR': 152.0,
-      'ZAR': 18.5,
-      'BRL': 5.05,
-      'MXN': 17.2,
-      'RUB': 92.5,
-      'TRY': 34.2,
-      'SEK': 10.5,
-      'NOK': 10.8,
+      'USD': 1.0, 'INR': 95.0, 'EUR': 0.92, 'GBP': 0.79,
+      'JPY': 149.5, 'AUD': 1.52, 'CAD': 1.36, 'CHF': 0.88,
+      'CNY': 7.24, 'AED': 3.67, 'SAR': 3.75, 'SGD': 1.34,
+      'HKD': 7.82, 'NZD': 1.64, 'KRW': 1330.0, 'THB': 36.5,
+      'MYR': 4.47, 'IDR': 15800.0, 'PHP': 56.5, 'PKR': 278.0,
+      'BDT': 110.0, 'LKR': 305.0, 'NPR': 152.0, 'ZAR': 18.5,
+      'BRL': 5.05, 'MXN': 17.2, 'RUB': 92.5, 'TRY': 34.2,
+      'SEK': 10.5, 'NOK': 10.8,
     };
     final fromUsd = usdRates[from];
     final toUsd = usdRates[to];
@@ -1158,7 +1128,6 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
           IconButton(
             onPressed: _forceRefresh,
             icon: const Icon(Icons.refresh, color: kRed),
-            tooltip: 'Force Refresh (clears cache)',
           ),
         ],
       ),
@@ -1345,35 +1314,11 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
                           color: Colors.white.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              _source.contains('Cache')
-                                  ? Icons.cached
-                                  : _source.contains('Live')
-                                      ? Icons.cloud_done
-                                      : Icons.offline_bolt,
-                              color: Colors.white,
-                              size: 12,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(_source,
-                                style: GoogleFonts.poppins(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w500,
-                                    color: Colors.white)),
-                          ],
-                        ),
-                      ),
-                    ],
-                    if (_lastUpdated != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        'Updated: ${_lastUpdated!.hour}:${_lastUpdated!.minute.toString().padLeft(2, '0')} • ${_lastUpdated!.day}/${_lastUpdated!.month}/${_lastUpdated!.year}',
-                        style: GoogleFonts.poppins(
-                            fontSize: 10,
-                            color: Colors.white.withValues(alpha: 0.7)),
+                        child: Text(_source,
+                            style: GoogleFonts.poppins(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w500,
+                                color: Colors.white)),
                       ),
                     ],
                   ],
@@ -1403,23 +1348,11 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
               ),
             ],
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text('Popular Conversions',
-                    style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: kTextWhite)),
-                TextButton.icon(
-                  onPressed: _forceRefresh,
-                  icon: const Icon(Icons.refresh, color: kRed, size: 16),
-                  label: Text('Refresh',
-                      style: GoogleFonts.poppins(
-                          fontSize: 12, color: kRed)),
-                ),
-              ],
-            ),
+            Text('Popular Conversions',
+                style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: kTextWhite)),
             const SizedBox(height: 8),
             Wrap(
               spacing: 8,
@@ -1465,7 +1398,8 @@ class _CurrencyScreenState extends State<CurrencyScreen> {
   }
 }
 
-// ═══════ EMI (with Pie Chart) ═══════
+
+// ═══════ EMI (with Pie Chart + Indian Format) ═══════
 class EmiCalculator extends StatefulWidget {
   const EmiCalculator({super.key});
   @override
@@ -1706,7 +1640,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                             color:
                                 Colors.white.withValues(alpha: 0.9))),
                     const SizedBox(height: 6),
-                    Text('Rs. ${_emi.toStringAsFixed(0)}',
+                    Text('Rs. ${formatIndianNumber(_emi)}',
                         style: GoogleFonts.poppins(
                             fontSize: 32,
                             fontWeight: FontWeight.bold,
@@ -1725,7 +1659,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                                     fontSize: 11,
                                     color: Colors.white
                                         .withValues(alpha: 0.7))),
-                            Text('Rs. ${_interest.toStringAsFixed(0)}',
+                            Text('Rs. ${formatIndianNumber(_interest)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -1740,7 +1674,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
                                     fontSize: 11,
                                     color: Colors.white
                                         .withValues(alpha: 0.7))),
-                            Text('Rs. ${_total.toStringAsFixed(0)}',
+                            Text('Rs. ${formatIndianNumber(_total)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w600,
@@ -1895,7 +1829,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
             Text(label,
                 style: GoogleFonts.poppins(
                     fontSize: 11, color: kTextGrey)),
-            Text('Rs. ${value.toStringAsFixed(0)}',
+            Text('Rs. ${formatIndianNumber(value)}',
                 style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
@@ -1937,7 +1871,7 @@ class _EmiCalculatorState extends State<EmiCalculator> {
   }
 }
 
-// ═══════ SIP (with Graph) ═══════
+// ═══════ SIP (with Graph + Indian Format) ═══════
 class SipCalculator extends StatefulWidget {
   const SipCalculator({super.key});
   @override
@@ -2120,7 +2054,7 @@ class _SipCalculatorState extends State<SipCalculator> {
                       style: GoogleFonts.poppins(
                           fontSize: 13, color: Colors.white)),
                   const SizedBox(height: 4),
-                  Text('Rs. ${_mat.toStringAsFixed(0)}',
+                  Text('Rs. ${formatIndianNumber(_mat)}',
                       style: GoogleFonts.poppins(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
@@ -2139,7 +2073,7 @@ class _SipCalculatorState extends State<SipCalculator> {
                                   fontSize: 10,
                                   color:
                                       Colors.white.withValues(alpha: 0.7))),
-                          Text('Rs. ${_inv.toStringAsFixed(0)}',
+                          Text('Rs. ${formatIndianNumber(_inv)}',
                               style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -2154,7 +2088,8 @@ class _SipCalculatorState extends State<SipCalculator> {
                                   fontSize: 10,
                                   color:
                                       Colors.white.withValues(alpha: 0.7))),
-                          Text('Rs. ${(_mat - _inv).toStringAsFixed(0)}',
+                          Text(
+                              'Rs. ${formatIndianNumber(_mat - _inv)}',
                               style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -2238,7 +2173,6 @@ class _SipCalculatorState extends State<SipCalculator> {
                         ),
                         borderData: FlBorderData(show: false),
                         lineBarsData: [
-                          // Invested Line
                           LineChartBarData(
                             spots: _schedule.asMap().entries.map((e) {
                               return FlSpot(
@@ -2255,7 +2189,6 @@ class _SipCalculatorState extends State<SipCalculator> {
                                   .withValues(alpha: 0.15),
                             ),
                           ),
-                          // Value Line
                           LineChartBarData(
                             spots: _schedule.asMap().entries.map((e) {
                               return FlSpot(
@@ -2507,7 +2440,7 @@ class _FdCalculatorState extends State<FdCalculator> {
                       style: GoogleFonts.poppins(
                           fontSize: 13, color: Colors.white)),
                   const SizedBox(height: 4),
-                  Text('Rs. ${_mat.toStringAsFixed(0)}',
+                  Text('Rs. ${formatIndianNumber(_mat)}',
                       style: GoogleFonts.poppins(
                           fontSize: 30,
                           fontWeight: FontWeight.bold,
@@ -2526,7 +2459,7 @@ class _FdCalculatorState extends State<FdCalculator> {
                                   fontSize: 10,
                                   color:
                                       Colors.white.withValues(alpha: 0.7))),
-                          Text('Rs. ${_p.text}',
+                          Text('Rs. ${formatIndianNumber(_p.text)}',
                               style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -2541,7 +2474,7 @@ class _FdCalculatorState extends State<FdCalculator> {
                                   fontSize: 10,
                                   color:
                                       Colors.white.withValues(alpha: 0.7))),
-                          Text('Rs. ${_int.toStringAsFixed(0)}',
+                          Text('Rs. ${formatIndianNumber(_int)}',
                               style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -2858,7 +2791,7 @@ class _GstCalculatorState extends State<GstCalculator> {
                             fontSize: 13,
                             color: Colors.white.withValues(alpha: 0.9))),
                     const SizedBox(height: 6),
-                    Text('Rs. ${_total.toStringAsFixed(2)}',
+                    Text('Rs. ${formatIndianNumber(_total)}',
                         style: GoogleFonts.poppins(
                             fontSize: 30,
                             fontWeight: FontWeight.bold,
@@ -2877,7 +2810,7 @@ class _GstCalculatorState extends State<GstCalculator> {
                                     fontSize: 11,
                                     color:
                                         Colors.white.withValues(alpha: 0.7))),
-                            Text('Rs. ${_base.toStringAsFixed(2)}',
+                            Text('Rs. ${formatIndianNumber(_base)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -2892,7 +2825,7 @@ class _GstCalculatorState extends State<GstCalculator> {
                                     fontSize: 11,
                                     color:
                                         Colors.white.withValues(alpha: 0.7))),
-                            Text('Rs. ${_gst.toStringAsFixed(2)}',
+                            Text('Rs. ${formatIndianNumber(_gst)}',
                                 style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
@@ -3445,21 +3378,12 @@ class _UnitConverterState extends State<UnitConverter> {
 
   final Map<String, Map<String, double>> _units = {
     'length': {
-      'm': 1,
-      'km': 1000,
-      'cm': 0.01,
-      'mm': 0.001,
-      'inch': 0.0254,
-      'ft': 0.3048,
-      'mile': 1609.34
+      'm': 1, 'km': 1000, 'cm': 0.01, 'mm': 0.001,
+      'inch': 0.0254, 'ft': 0.3048, 'mile': 1609.34
     },
     'weight': {
-      'kg': 1,
-      'g': 0.001,
-      'mg': 0.000001,
-      'ton': 1000,
-      'lb': 0.453592,
-      'oz': 0.0283495
+      'kg': 1, 'g': 0.001, 'mg': 0.000001, 'ton': 1000,
+      'lb': 0.453592, 'oz': 0.0283495
     },
   };
 
@@ -3867,4 +3791,48 @@ pw.Widget pdfSummaryBox(
 String _pdfDate() {
   final n = DateTime.now();
   return '${n.day}/${n.month}/${n.year} ${n.hour}:${n.minute.toString().padLeft(2, '0')}';
+}
+
+// ═══════ NUMBER FORMATTER (Indian) ═══════
+String formatIndianNumber(dynamic number) {
+  if (number == null) return '0';
+
+  double num;
+  if (number is String) {
+    num = double.tryParse(number) ?? 0;
+  } else {
+    num = (number as num).toDouble();
+  }
+
+  bool hasDecimal = num % 1 != 0;
+  String numStr = hasDecimal
+      ? num.toStringAsFixed(2)
+      : num.toInt().toString();
+
+  String intPart = numStr.split('.').first;
+  String decimalPart =
+      numStr.contains('.') ? '.${numStr.split('.').last}' : '';
+
+  bool isNegative = intPart.startsWith('-');
+  if (isNegative) intPart = intPart.substring(1);
+
+  String formatted = '';
+  if (intPart.length <= 3) {
+    formatted = intPart;
+  } else {
+    formatted = intPart.substring(intPart.length - 3);
+    String remaining = intPart.substring(0, intPart.length - 3);
+
+    while (remaining.length > 2) {
+      formatted =
+          '${remaining.substring(remaining.length - 2)},$formatted';
+      remaining = remaining.substring(0, remaining.length - 2);
+    }
+
+    if (remaining.isNotEmpty) {
+      formatted = '$remaining,$formatted';
+    }
+  }
+
+  return '${isNegative ? '-' : ''}$formatted$decimalPart';
 }
