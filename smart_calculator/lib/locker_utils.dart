@@ -170,7 +170,7 @@ class LockerUtils {
     }
   }
 
-  // ✅ Simple copy + delete (no MediaStore)
+  // ✅ Simple copy + delete (NO MediaStore)
   static Future<String?> hidePhoto(String sourcePath) async {
     try {
       final dir = await getPhotosDir();
