@@ -3,16 +3,20 @@
 ## App Info
 - Name: Smart Calculator - EMI, SIP, FD
 - Package: com.vasim1234.smartcalculator
-- Version: 1.0.1+6
+- Version: 1.0.1+5
 - GitHub: github.com/vasim1234/calculator.emi
 
 ## Status
 - ✅ Indus Appstore pe Published (22/09/2026)
 - ✅ eKYC Complete
 - ✅ Release Keystore Setup Complete
-- ✅ Private Locker (Notes + Photos) Working
-- ✅ Biometric Authentication Working
+- ✅ Charts Added (EMI Pie + SIP Graph)
+- ✅ Indian Number Format Added (5,00,000)
 - ✅ Tap Sound Working
+- ✅ Private Notes Locker Working
+- ✅ Biometric Authentication Working
+- 🚀 Photo Locker (Coming Soon)
+- 🟡 v1.0.1+5 In Review (26/09/2026)
 
 ## Files
 - main.dart: smart_calculator/lib/main.dart
@@ -21,32 +25,30 @@
 - MainActivity.kt: smart_calculator/android/app/src/main/kotlin/com/vasim1234/smartcalculator/MainActivity.kt
 - locker_utils.dart: smart_calculator/lib/locker_utils.dart
 - locker_screen.dart: smart_calculator/lib/locker_screen.dart
-- photo_locker_screen.dart: smart_calculator/lib/photo_locker_screen.dart
 - AndroidManifest.xml: smart_calculator/android/app/src/main/AndroidManifest.xml
 - build.yml: .github/workflows/build.yml
 - privacy.html: privacy.html
 
-## Features (14+)
+## Features (16+)
 - Calculator (live preview + percentage)
-- EMI + PDF
-- SIP + PDF
-- FD + PDF
-- GST + PDF
-- BMI + PDF
-- Currency (3-layer cache)
-- Age Calculator
-- Date Calculator
-- Unit Converter
-- WhatsApp Share
-- Dark theme
 - 🔊 Tap sound (System sound)
+- 💰 EMI + PDF + 📊 Pie Chart
+- 🏦 SIP + PDF + 📈 Growth Graph
+- 📈 FD + PDF
+- 💵 GST + PDF
+- ⚖️ BMI + PDF
+- 🎂 Age Calculator
+- 📅 Date Calculator
+- 🔄 Unit Converter
+- 💱 Currency (3-layer cache)
+- 📤 WhatsApp Share
+- 🌙 Dark theme
+- 🇮🇳 Indian Number Format (5,00,000)
 - 🔐 Private Notes Locker (PIN protected)
 - 🔓 Forgot PIN (security question)
 - 👆 Biometric unlock
-- 📷 Photo Locker (hide photos)
-- 🖼️ Photo Viewer (full screen + zoom)
-- 🗑️ Photo Delete
 - 📝 Note Dialog (improved UI)
+- 🚀 Photo Locker (Coming Soon)
 
 ## Release Keystore Info
 - Keystore File: upload-keystore.jks
@@ -61,13 +63,23 @@
 - KEY_ALIAS
 - KEY_PASSWORD
 
+## Dependencies (pubspec.yaml)
+- flutter
+- cupertino_icons
+- google_fonts
+- pdf
+- printing
+- path_provider
+- http
+- shared_preferences
+- local_auth
+- image_picker
+- image
+- fl_chart
+
 ## Permissions (AndroidManifest.xml)
 - USE_BIOMETRIC
 - USE_FINGERPRINT
-- READ_MEDIA_IMAGES
-- READ_MEDIA_VIDEO
-- READ_EXTERNAL_STORAGE (max SDK 32)
-- WRITE_EXTERNAL_STORAGE (max SDK 29)
 
 ## Key Learnings
 - Package name unique hona chahiye
@@ -79,14 +91,23 @@
 - SystemSound.play() Xiaomi phones pe kaam nahi karta (Tap sounds ON karo)
 - Photo Locker 100% offline hai - user ke phone mein hi
 - Android 13+ ke liye READ_MEDIA_IMAGES chahiye
+- `num` variable name se conflict hota hai - `value` use karo
+- fl_chart package charts ke liye use hota hai
+- Indian number format: last 3 digits, phir groups of 2
 
 ## Next Steps
-- v1.0.1+6 ko Indus Appstore pe update karo
-- Users feedback lo
-- Bhai Bhai Music app bhi complete karo
-- Play Store pe bhi daalo
-- Charts (EMI Pie, SIP Graph) add karo
-- Share button (all calculators) add karo
+- 🟡 v1.0.1+5 ko Indus Appstore pe In Review
+- ⏳ Support se reply aane ka wait (app delete request)
+- 🔄 Nayi app banao (agar delete ho jaye)
+- 🎨 Photo Locker properly implement karo
+- 📊 Charts aur improve karo
+- 📤 Share button (all calculators) add karo
+- 🎤 Voice Input add karo
+- 📐 Scientific Calculator add karo
+- 💰 Tax Calculator (Income Tax) add karo
+- 🥇 Gold/Silver Rate add karo
+- 🏪 Play Store pe bhi daalo
+- 🎵 Bhai Bhai Music app complete karo
 
 ## Contact
 - Email: vashimaiyub@gmail.com
